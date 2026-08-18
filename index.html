@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,11 +8,16 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <!-- FontAwesome for Premium Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar/Header Panel -->
@@ -21,11 +27,11 @@
                     <i class="fa-solid fa-wallet"></i>
                 </div>
                 <div>
-                    <h1>SalaryTrack <span class="logo-accent">Pro</span></h1>
+                    <h1>Rojalin Hospitality <span class="logo-accent">Services</span></h1>
                     <p class="subtitle">Track hours, rates, advances, and payroll</p>
                 </div>
             </div>
-            
+
             <div class="header-controls">
                 <div class="control-group">
                     <label for="monthSelector"><i class="fa-regular fa-calendar-days"></i> Select Month</label>
@@ -45,7 +51,7 @@
                     <i class="fa-solid fa-users"></i>
                 </div>
             </div>
-            
+
             <div class="metric-card" id="cardHours">
                 <div class="metric-info">
                     <span class="metric-title">Total Hours Worked</span>
@@ -91,9 +97,10 @@
         <section class="control-bar" id="controlBar" aria-label="Controls and Actions">
             <div class="search-box">
                 <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="text" id="employeeSearch" placeholder="Search employees..." class="custom-input search-input">
+                <input type="text" id="employeeSearch" placeholder="Search employees..."
+                    class="custom-input search-input">
             </div>
-            
+
             <div class="action-buttons">
                 <button type="button" id="btnAddEmployee" class="btn btn-primary">
                     <i class="fa-solid fa-plus"></i> Add Employee
@@ -149,17 +156,20 @@
                 <form id="employeeForm">
                     <div class="form-group">
                         <label for="newEmployeeName">Full Name <span class="required">*</span></label>
-                        <input type="text" id="newEmployeeName" placeholder="e.g. Dev Bhuyan" required class="custom-input">
+                        <input type="text" id="newEmployeeName" placeholder="e.g. Dev Bhuyan" required
+                            class="custom-input">
                     </div>
                     <div class="form-group">
                         <label for="newEmployeeRate">Hourly Rate (₹/hour) <span class="required">*</span></label>
                         <div class="input-prefix-wrapper">
                             <span class="input-prefix">₹</span>
-                            <input type="number" id="newEmployeeRate" placeholder="e.g. 150" min="0" step="any" required class="custom-input">
+                            <input type="number" id="newEmployeeRate" placeholder="e.g. 150" min="0" step="any" required
+                                class="custom-input">
                         </div>
                     </div>
                     <div class="modal-actions">
-                        <button type="button" class="btn btn-secondary modal-close-btn" data-close="employeeModal">Cancel</button>
+                        <button type="button" class="btn btn-secondary modal-close-btn"
+                            data-close="employeeModal">Cancel</button>
                         <button type="submit" id="btnSaveEmployee" class="btn btn-primary">Save Employee</button>
                     </div>
                 </form>
@@ -201,12 +211,14 @@
                                 <label for="advAmount">Advance Amount (₹) <span class="required">*</span></label>
                                 <div class="input-prefix-wrapper">
                                     <span class="input-prefix">₹</span>
-                                    <input type="number" id="advAmount" min="1" step="any" placeholder="e.g. 500" required class="custom-input">
+                                    <input type="number" id="advAmount" min="1" step="any" placeholder="e.g. 500"
+                                        required class="custom-input">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label for="advNotes">Notes/Remarks</label>
-                                <input type="text" id="advNotes" placeholder="e.g. Personal emergency, advance for travel" class="custom-input">
+                                <input type="text" id="advNotes"
+                                    placeholder="e.g. Personal emergency, advance for travel" class="custom-input">
                             </div>
                             <button type="submit" class="btn btn-primary btn-full-width">
                                 <i class="fa-solid fa-plus"></i> Add Advance Payment
@@ -247,4 +259,5 @@
 
     <script src="app.js"></script>
 </body>
+
 </html>
