@@ -1,0 +1,996 @@
+/* ==========================================================================
+   Design Tokens & CSS Custom Properties (Premium Dark Theme)
+   ========================================================================== */
+:root {
+    --bg-primary: #0a0e1a;
+    --bg-secondary: #131929;
+    --bg-card: rgba(22, 30, 53, 0.85);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-color-glow: rgba(99, 102, 241, 0.25);
+    
+    /* Text colors */
+    --text-primary: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+    
+    /* Theme color states */
+    --color-primary: #6366f1; /* Indigo */
+    --color-primary-hover: #4f46e5;
+    --color-primary-glow: rgba(99, 102, 241, 0.15);
+    
+    --color-success: #10b981; /* Emerald Green */
+    --color-success-glow: rgba(16, 185, 129, 0.15);
+    
+    --color-warning: #f59e0b; /* Amber */
+    
+    --color-danger: #ef4444; /* Rose Red */
+    --color-danger-hover: #dc2626;
+    --color-danger-glow: rgba(239, 68, 68, 0.15);
+    
+    --color-info: #06b6d4; /* Cyan */
+    --color-purple: #a855f7; /* Purple */
+    
+    /* Fonts */
+    --font-heading: 'Outfit', -apple-system, sans-serif;
+    --font-body: 'Inter', -apple-system, sans-serif;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+    --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
+    
+    --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================================================
+   Base Styles
+   ========================================================================== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    min-height: 100vh;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.08) 0px, transparent 50%);
+    background-attachment: fixed;
+}
+
+.app-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* ==========================================================================
+   Typography & Headers
+   ========================================================================== */
+h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+/* Header Component */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+}
+
+.logo-area h1 {
+    font-size: 1.5rem;
+    line-height: 1.2;
+}
+
+.logo-accent {
+    background: linear-gradient(to right, #818cf8, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.header-controls {
+    display: flex;
+    gap: 1rem;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.control-group label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   KPI / Metrics Panel
+   ========================================================================== */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+}
+
+.metric-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform var(--transition-normal), border-color var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.metric-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-color-glow);
+    box-shadow: var(--shadow-glow);
+}
+
+.metric-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.metric-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+}
+
+.metric-value {
+    font-family: var(--font-heading);
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.metric-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.bg-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.25); }
+.bg-purple { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.25); }
+.bg-green { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); }
+.bg-orange { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
+.bg-pink { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.25); }
+
+/* ==========================================================================
+   Control Bar (Actions & Search)
+   ========================================================================== */
+.control-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+    border-radius: 16px;
+}
+
+.search-box {
+    position: relative;
+    flex: 1;
+    min-width: 250px;
+    max-width: 450px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.search-input {
+    padding-left: 2.5rem !important;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* Form Inputs */
+.custom-input {
+    background-color: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    width: 100%;
+}
+
+.custom-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.custom-input::placeholder {
+    color: var(--text-muted);
+}
+
+input[type="month"].custom-input {
+    padding: 0.5rem 0.8rem;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--text-secondary);
+}
+
+.btn-full-width {
+    width: 100%;
+}
+
+/* ==========================================================================
+   Table & Grid Styling (Sticky Spreadsheet)
+   ========================================================================== */
+.table-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+.table-responsive-container {
+    overflow-x: auto;
+    max-width: 100%;
+    max-height: 600px; /* Vertical scrollable table */
+}
+
+/* Customized scrollbars for the table body */
+.table-responsive-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-responsive-container::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.3);
+}
+
+.table-responsive-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+.table-responsive-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.payroll-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.85rem;
+    text-align: left;
+}
+
+/* Header & Cell general layout */
+.payroll-table th, 
+.payroll-table td {
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid rgba(255, 255, 255, 0.03);
+    white-space: nowrap;
+    height: 52px;
+}
+
+.payroll-table th {
+    background-color: #111726;
+    color: var(--text-secondary);
+    font-family: var(--font-heading);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Sticky column classes */
+.payroll-table th.sticky-col-left,
+.payroll-table td.sticky-col-left,
+.payroll-table th.sticky-col-right,
+.payroll-table td.sticky-col-right {
+    position: sticky;
+    z-index: 5;
+}
+
+/* Sticky headers left/right need to override base sticky headers index */
+.payroll-table th.sticky-col-left {
+    z-index: 15;
+}
+.payroll-table th.sticky-col-right {
+    z-index: 15;
+}
+
+/* Offsets for multiple sticky columns */
+/* LEFT:
+   Col 1: Name (Width: 180px, left: 0)
+   Col 2: Rate (Width: 95px, left: 180px)
+*/
+.col-emp-name {
+    width: 180px;
+    min-width: 180px;
+    max-width: 180px;
+    left: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.col-emp-rate {
+    width: 95px;
+    min-width: 95px;
+    max-width: 95px;
+    left: 180px;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Solid background overlay for sticky left items to hide items scrolling behind them */
+.payroll-table td.sticky-col-left {
+    background-color: #121827;
+}
+
+.payroll-table tr:hover td.sticky-col-left {
+    background-color: #182033;
+}
+
+/* RIGHT:
+   Col -5: Total Hours (Width: 80px, right: 380px)
+   Col -4: Gross Pay (Width: 100px, right: 280px)
+   Col -3: Advances (Width: 100px, right: 180px)
+   Col -2: Net Pay (Width: 110px, right: 70px)
+   Col -1: Actions (Width: 70px, right: 0)
+*/
+.col-total-hours {
+    width: 80px;
+    min-width: 80px;
+    max-width: 80px;
+    right: 380px;
+    text-align: center;
+    border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.col-gross-pay {
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+    right: 280px;
+    font-weight: 500;
+}
+
+.col-advances {
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+    right: 180px;
+}
+
+.col-net-pay {
+    width: 110px;
+    min-width: 110px;
+    max-width: 110px;
+    right: 70px;
+    font-weight: 600;
+    color: var(--color-success);
+}
+
+.col-actions {
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+    right: 0;
+    text-align: center;
+}
+
+.payroll-table td.sticky-col-right {
+    background-color: #121827;
+}
+
+.payroll-table tr:hover td.sticky-col-right {
+    background-color: #182033;
+}
+
+/* Calendar Days Columns (Scrollable area) */
+.col-day-cell {
+    width: 44px;
+    min-width: 44px;
+    max-width: 44px;
+    padding: 0.4rem 0.2rem !important;
+    text-align: center;
+}
+
+.day-header {
+    text-align: center;
+    font-family: var(--font-body);
+}
+
+.day-header .date-num {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.day-header .date-name {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}
+
+/* Hour edit inputs inside dynamic cells */
+.cell-hour-input {
+    width: 100%;
+    height: 32px;
+    border: 1px solid transparent;
+    background-color: transparent;
+    color: var(--text-primary);
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 6px;
+    outline: none;
+    transition: all var(--transition-fast);
+    padding: 0;
+}
+
+.cell-hour-input::placeholder {
+    color: rgba(255, 255, 255, 0.12);
+}
+
+.cell-hour-input:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.cell-hour-input:focus {
+    background-color: var(--bg-primary);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 5px rgba(99, 102, 241, 0.3);
+}
+
+/* Color indicators for active days */
+.cell-hour-input.has-hours {
+    color: #c084fc;
+    font-weight: 700;
+    background-color: rgba(168, 85, 247, 0.05);
+}
+
+.cell-hour-input.has-overtime {
+    color: var(--color-success);
+    font-weight: 700;
+    background-color: rgba(16, 185, 129, 0.08);
+}
+
+/* Style for rows */
+.payroll-table tbody tr {
+    transition: background-color var(--transition-fast);
+}
+
+.payroll-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Inline Edit styles */
+.employee-name-cell, .employee-rate-cell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.employee-rate-value {
+    font-weight: 500;
+}
+
+.btn-inline-edit {
+    opacity: 0;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+
+.payroll-table td:hover .btn-inline-edit {
+    opacity: 1;
+}
+
+.btn-inline-edit:hover {
+    color: var(--text-primary);
+}
+
+/* Dynamic cell value containers for columns */
+.gross-value, .net-value, .hours-value {
+    display: block;
+    font-variant-numeric: tabular-nums;
+}
+
+.btn-manage-advances {
+    background-color: rgba(245, 158, 11, 0.08);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.15);
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    width: 100%;
+    text-align: center;
+}
+
+.btn-manage-advances:hover {
+    background-color: rgba(245, 158, 11, 0.18);
+    border-color: rgba(245, 158, 11, 0.3);
+    transform: translateY(-1px);
+}
+
+.btn-trash {
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0.35rem;
+    border-radius: 6px;
+    transition: all var(--transition-fast);
+}
+
+.btn-trash:hover {
+    color: var(--color-danger);
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* Empty State Table */
+.empty-state-container {
+    padding: 5rem 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.empty-icon {
+    width: 72px;
+    height: 72px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--text-muted);
+}
+
+.empty-state-container h3 {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+
+.empty-state-container p {
+    color: var(--text-secondary);
+    max-width: 400px;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+/* ==========================================================================
+   Modals & Backdrop Blur
+   ========================================================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(5, 7, 14, 0.8);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-normal);
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background-color: #0f1524;
+    border: 1px solid var(--border-color-glow);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), var(--shadow-glow);
+    border-radius: 18px;
+    width: 90%;
+    max-width: 500px;
+    overflow: hidden;
+    transform: translateY(20px);
+    transition: transform var(--transition-normal);
+}
+
+.modal-overlay.active .modal-content {
+    transform: translateY(0);
+}
+
+.modal-lg {
+    max-width: 900px !important;
+}
+
+.modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    font-size: 1.25rem;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.btn-close:hover {
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.required {
+    color: var(--color-danger);
+}
+
+/* Prefixes wrapper (ex: ₹ rupees sign) */
+.input-prefix-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-prefix {
+    position: absolute;
+    left: 1rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.input-prefix-wrapper .custom-input {
+    padding-left: 2rem;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+}
+
+/* ==========================================================================
+   Advances Ledger Panel Styles
+   ========================================================================== */
+.employee-meta-summary {
+    display: flex;
+    justify-content: space-between;
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.employee-meta-summary div {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.employee-meta-summary .label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.employee-meta-summary .value {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.advances-container {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 1.75rem;
+}
+
+@media (max-width: 768px) {
+    .advances-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.advance-form-panel {
+    background-color: rgba(255, 255, 255, 0.01);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem;
+}
+
+.advance-form-panel h3,
+.advance-ledger-panel h3 {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 0.5rem;
+}
+
+.advance-ledger-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.ledger-table-wrapper {
+    background-color: rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    height: 290px;
+    overflow-y: auto;
+}
+
+.ledger-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    text-align: left;
+}
+
+.ledger-table th,
+.ledger-table td {
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ledger-table th {
+    background-color: rgba(15, 23, 42, 0.4);
+    color: var(--text-secondary);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+
+.ledger-table td {
+    color: var(--text-primary);
+}
+
+.empty-ledger-state {
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.empty-ledger-state i {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.empty-ledger-state p {
+    font-size: 0.8rem;
+}
+
+/* ==========================================================================
+   Toast System (Notifications)
+   ========================================================================== */
+.toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    z-index: 200;
+}
+
+.toast {
+    background-color: #121929;
+    border: 1px solid var(--border-color-glow);
+    box-shadow: var(--shadow-lg), 0 0 10px rgba(99, 102, 241, 0.1);
+    color: var(--text-primary);
+    border-radius: 10px;
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    min-width: 280px;
+    max-width: 400px;
+    transform: translateY(100px);
+    opacity: 0;
+    animation: toast-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast-success {
+    border-left: 4px solid var(--color-success);
+}
+.toast-success i {
+    color: var(--color-success);
+}
+
+.toast-error {
+    border-left: 4px solid var(--color-danger);
+}
+.toast-error i {
+    color: var(--color-danger);
+}
+
+.toast-info {
+    border-left: 4px solid var(--color-info);
+}
+.toast-info i {
+    color: var(--color-info);
+}
+
+@keyframes toast-in {
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.toast-fade-out {
+    animation: toast-out 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes toast-out {
+    to {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+}
