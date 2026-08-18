@@ -506,9 +506,9 @@ input[type="month"].custom-input {
 
 /* Calendar Days Columns (Scrollable area) */
 .col-day-cell {
-    width: 44px;
-    min-width: 44px;
-    max-width: 44px;
+    width: 52px;
+    min-width: 52px;
+    max-width: 52px;
     padding: 0.4rem 0.2rem !important;
     text-align: center;
 }
@@ -532,49 +532,94 @@ input[type="month"].custom-input {
     color: var(--text-muted);
 }
 
-/* Hour edit inputs inside dynamic cells */
-.cell-hour-input {
-    width: 100%;
+/* Hour:Minute dual input cells */
+.hm-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
     height: 32px;
     border: 1px solid transparent;
-    background-color: transparent;
-    color: var(--text-primary);
-    text-align: center;
-    font-family: var(--font-body);
-    font-size: 0.85rem;
-    font-weight: 500;
     border-radius: 6px;
-    outline: none;
     transition: all var(--transition-fast);
-    padding: 0;
+    background-color: transparent;
 }
 
-.cell-hour-input::placeholder {
-    color: rgba(255, 255, 255, 0.12);
-}
-
-.cell-hour-input:hover {
+.hm-cell:hover {
     background-color: rgba(255, 255, 255, 0.03);
     border-color: rgba(255, 255, 255, 0.1);
 }
 
-.cell-hour-input:focus {
+.hm-cell:focus-within {
     background-color: var(--bg-primary);
     border-color: var(--color-primary);
     box-shadow: 0 0 5px rgba(99, 102, 241, 0.3);
 }
 
-/* Color indicators for active days */
-.cell-hour-input.has-hours {
-    color: #c084fc;
-    font-weight: 700;
-    background-color: rgba(168, 85, 247, 0.05);
+.hm-input {
+    width: 16px;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 500;
+    outline: none;
+    padding: 0;
+    -moz-appearance: textfield;
 }
 
-.cell-hour-input.has-overtime {
+.hm-input::placeholder {
+    color: rgba(255, 255, 255, 0.12);
+    font-size: 0.65rem;
+}
+
+/* Remove number spinners for all browsers */
+.hm-input::-webkit-outer-spin-button,
+.hm-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.hm-sep {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1;
+    user-select: none;
+    opacity: 0.4;
+}
+
+.hm-cell:focus-within .hm-sep {
+    opacity: 0.8;
+    color: var(--color-primary);
+}
+
+/* Color indicators for active days */
+.hm-cell.has-hours .hm-input {
+    color: #c084fc;
+    font-weight: 700;
+}
+.hm-cell.has-hours {
+    background-color: rgba(168, 85, 247, 0.05);
+}
+.hm-cell.has-hours .hm-sep {
+    color: #c084fc;
+    opacity: 0.6;
+}
+
+.hm-cell.has-overtime .hm-input {
     color: var(--color-success);
     font-weight: 700;
+}
+.hm-cell.has-overtime {
     background-color: rgba(16, 185, 129, 0.08);
+}
+.hm-cell.has-overtime .hm-sep {
+    color: var(--color-success);
+    opacity: 0.6;
 }
 
 /* Style for rows */

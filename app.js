@@ -256,29 +256,42 @@ function renderTable() {
 
         for (let d = 1; d <= daysInMonth; d++) {
             const dateStr = formatDateKey(selectedYear, selectedMonthIndex, d);
-            const hrs = emp.hours[dateStr] !== undefined ? emp.hours[dateStr] : "";
+            const rawVal = emp.hours[dateStr];
+            const hasValue = rawVal !== undefined && rawVal !== "";
             
-            if (hrs !== "") {
-                empTotalHours += parseFloat(hrs);
+            let displayH = "";
+            let displayM = "";
+            if (hasValue) {
+                const totalMinutes = Math.round(parseFloat(rawVal) * 60);
+                displayH = Math.floor(totalMinutes / 60);
+                displayM = totalMinutes % 60;
+                empTotalHours += parseFloat(rawVal);
             }
 
-            let inputClass = "cell-hour-input";
-            if (hrs !== "" && hrs > 0) {
-                inputClass += hrs > 8 ? " has-overtime" : " has-hours";
+            let cellClass = "hm-cell";
+            if (hasValue && parseFloat(rawVal) > 0) {
+                cellClass += parseFloat(rawVal) > 8 ? " has-overtime" : " has-hours";
             }
 
             dayCellsHtml += `
                 <td class="col-day-cell">
-                    <input type="number" 
-                           class="${inputClass}" 
-                           data-emp-id="${emp.id}" 
-                           data-date="${dateStr}" 
-                           value="${hrs}" 
-                           min="0" 
-                           max="24" 
-                           step="any" 
-                           placeholder="-"
-                           oninput="handleHourInput(this)">
+                    <div class="${cellClass}" data-emp-id="${emp.id}" data-date="${dateStr}">
+                        <input type="text" 
+                               class="hm-input hm-hour" 
+                               value="${hasValue ? displayH : ''}" 
+                               placeholder="h"
+                               maxlength="2"
+                               inputmode="numeric"
+                               oninput="handleHMInput(this)">
+                        <span class="hm-sep">:</span>
+                        <input type="text" 
+                               class="hm-input hm-min" 
+                               value="${hasValue ? String(displayM).padStart(2, '0') : ''}" 
+                               placeholder="m"
+                               maxlength="2"
+                               inputmode="numeric"
+                               oninput="handleHMInput(this)">
+                    </div>
                 </td>
             `;
         }
@@ -304,7 +317,7 @@ function renderTable() {
                 </td>
                 ${dayCellsHtml}
                 <td class="sticky-col-right col-total-hours">
-                    <span class="hours-value" id="hours-${emp.id}">${empTotalHours.toFixed(1)}</span>
+                    <span class="hours-value" id="hours-${emp.id}">${formatHoursDisplay(empTotalHours)}</span>
                 </td>
                 <td class="sticky-col-right col-gross-pay">
                     <span class="gross-value" id="gross-${emp.id}">₹${grossPay.toFixed(2)}</span>
@@ -361,38 +374,74 @@ function updateKPIs() {
     });
 
     document.getElementById("valTotalEmployees").textContent = totalEmployees;
-    document.getElementById("valTotalHours").textContent = totalHours.toFixed(1);
+    document.getElementById("valTotalHours").textContent = formatHoursDisplay(totalHours);
     document.getElementById("valTotalGross").textContent = "₹" + grossSalary.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     document.getElementById("valTotalAdvances").textContent = "₹" + totalAdvances.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     document.getElementById("valTotalNet").textContent = "₹" + netPayout.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+// Formats decimal hours as "Xh Ym"
+function formatHoursDisplay(decimalHours) {
+    const totalMinutes = Math.round(decimalHours * 60);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    if (m === 0) return `${h}h`;
+    return `${h}h ${m}m`;
+}
+
 // ==========================================================================
-// Hours Input Handler (Sheet Cell updates)
+// Hours Input Handler (Sheet Cell updates) - Hours:Minutes dual input
 // ==========================================================================
-function handleHourInput(inputElement) {
-    const empId = inputElement.getAttribute("data-emp-id");
-    const dateStr = inputElement.getAttribute("data-date");
-    const val = inputElement.value.trim();
+function handleHMInput(inputElement) {
+    // Only allow digits
+    inputElement.value = inputElement.value.replace(/[^0-9]/g, '');
+    
+    const cellDiv = inputElement.closest('.hm-cell');
+    const empId = cellDiv.getAttribute("data-emp-id");
+    const dateStr = cellDiv.getAttribute("data-date");
+    
+    const hourInput = cellDiv.querySelector('.hm-hour');
+    const minInput = cellDiv.querySelector('.hm-min');
+    
+    const hVal = hourInput.value.trim();
+    const mVal = minInput.value.trim();
 
     const emp = employees.find(e => e.id === empId);
     if (!emp) return;
 
-    // Update state
-    if (val === "") {
+    // If both empty, remove entry
+    if (hVal === "" && mVal === "") {
         delete emp.hours[dateStr];
-        inputElement.className = "cell-hour-input";
+        cellDiv.className = "hm-cell";
     } else {
-        const floatVal = Math.min(24, Math.max(0, parseFloat(val) || 0));
-        emp.hours[dateStr] = floatVal;
+        let hours = parseInt(hVal) || 0;
+        let minutes = parseInt(mVal) || 0;
+        
+        // Clamp values
+        hours = Math.min(24, Math.max(0, hours));
+        minutes = Math.min(59, Math.max(0, minutes));
+        
+        // If hours is 24, minutes must be 0
+        if (hours >= 24) {
+            hours = 24;
+            minutes = 0;
+        }
+        
+        const decimalHours = hours + (minutes / 60);
+        emp.hours[dateStr] = decimalHours;
         
         // Dynamic coloring classes
-        let newClass = "cell-hour-input";
-        if (floatVal > 0) {
-            newClass += floatVal > 8 ? " has-overtime" : " has-hours";
+        let newClass = "hm-cell";
+        if (decimalHours > 0) {
+            newClass += decimalHours > 8 ? " has-overtime" : " has-hours";
         }
-        inputElement.className = newClass;
-        inputElement.value = floatVal; // clamp between 0-24
+        cellDiv.className = newClass;
+    }
+
+    // Auto-advance: when hour input has 2 digits, jump to minute input
+    if (inputElement.classList.contains('hm-hour') && hVal.length >= 2) {
+        minInput.focus();
+        minInput.select();
     }
 
     saveStateToStorage();
@@ -419,7 +468,7 @@ function recalculateRow(empId) {
     const netPay = grossPay - totalAdvances;
 
     // Update DOM nodes directly for extreme speed and fluid feels
-    document.getElementById(`hours-${empId}`).textContent = empTotalHours.toFixed(1);
+    document.getElementById(`hours-${empId}`).textContent = formatHoursDisplay(empTotalHours);
     document.getElementById(`gross-${empId}`).textContent = `₹${grossPay.toFixed(2)}`;
     document.getElementById(`adv-btn-${empId}`).textContent = `₹${totalAdvances.toFixed(2)}`;
     document.getElementById(`net-${empId}`).textContent = `₹${netPay.toFixed(2)}`;
