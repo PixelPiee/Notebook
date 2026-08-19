@@ -10,6 +10,16 @@ let searchQuery = "";
 let currentEmployeeForAdvances = null;
 let editingEmployeeId = null;
 
+// Backend API configuration
+const API_BASE_URL =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+        ? "http://localhost:8787"
+        : "https://notebook.dev-bhuyan256.workers.dev";
+let saveTimer = null;
+let isLoadingFromServer = false;
+let serverSyncInProgress = false;
+
 // Mock Data for New Users (Visual Showcase)
 const defaultEmployees = [
     {
@@ -91,29 +101,67 @@ document.addEventListener("DOMContentLoaded", () => {
     initApp();
 });
 
-function initApp() {
+async function initApp() {
     // 1. Initialize Date Selectors
     const monthSelector = document.getElementById("monthSelector");
-    
-    // Set default month to August 2026 to match mock data
+
+    // Set default month to August 2026 to match the existing demo data
     selectedYear = 2026;
-    selectedMonthIndex = 7; // August
+    selectedMonthIndex = 7;
     monthSelector.value = "2026-08";
 
-    // 2. Load Data from LocalStorage
-    const storedState = localStorage.getItem("salarytrack_state");
-    if (storedState) {
-        try {
-            employees = JSON.parse(storedState);
-        } catch (e) {
-            console.error("Failed to parse local storage state. Reverting to mock data.", e);
-            employees = [...defaultEmployees];
-            saveStateToStorage();
+    // 2. Load shared data from the Cloudflare Worker/D1 backend.
+    // LocalStorage is kept as a temporary offline cache/fallback.
+    isLoadingFromServer = true;
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/state`, {
+            method: "GET",
+            headers: { "Accept": "application/json" }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Backend returned HTTP ${response.status}`);
         }
-    } else {
-        // Fallback to sample data for interactive first-time experience
-        employees = [...defaultEmployees];
-        saveStateToStorage();
+
+        const payload = await response.json();
+
+        if (Array.isArray(payload.employees) && payload.employees.length > 0) {
+            employees = payload.employees;
+            localStorage.setItem("salarytrack_state", JSON.stringify(employees));
+        } else {
+            // First-time setup: preserve an existing local backup if available;
+            // otherwise use the current demo data and upload it to the backend.
+            const storedState = localStorage.getItem("salarytrack_state");
+            if (storedState) {
+                try {
+                    employees = JSON.parse(storedState);
+                } catch {
+                    employees = [...defaultEmployees];
+                }
+            } else {
+                employees = [...defaultEmployees];
+            }
+
+            await syncStateToBackend(true);
+        }
+    } catch (error) {
+        console.warn("Backend unavailable. Using local cached/demo data.", error);
+
+        const storedState = localStorage.getItem("salarytrack_state");
+        if (storedState) {
+            try {
+                employees = JSON.parse(storedState);
+            } catch {
+                employees = [...defaultEmployees];
+            }
+        } else {
+            employees = [...defaultEmployees];
+            localStorage.setItem("salarytrack_state", JSON.stringify(employees));
+        }
+
+        showToast("Backend unavailable — using local data.", "info");
+    } finally {
+        isLoadingFromServer = false;
     }
 
     // 3. Register Event Listeners
@@ -495,6 +543,9 @@ function openEditEmployeeModal(empId) {
     openModal("employeeModal");
 }
 
+// ==========================================================================
+// Form Submission, Updates, Actions
+// ==========================================================================
 function handleEmployeeFormSubmit(e) {
     e.preventDefault();
     const nameInput = document.getElementById("newEmployeeName");
@@ -734,7 +785,47 @@ function closeModal(modalId) {
 // State Storage Persistence
 // ==========================================================================
 function saveStateToStorage() {
+    // Keep an immediate local cache so the UI remains responsive/offline.
     localStorage.setItem("salarytrack_state", JSON.stringify(employees));
+
+    // Avoid sending one network request for every character typed into a
+    // timesheet cell. Changes are synced in a short debounce window.
+    if (isLoadingFromServer) return;
+
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+        syncStateToBackend(false);
+    }, 500);
+}
+
+async function syncStateToBackend(showSuccessToast = false) {
+    if (serverSyncInProgress) return;
+
+    serverSyncInProgress = true;
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/state`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify({ employees })
+        });
+
+        if (!response.ok) {
+            const message = await response.text();
+            throw new Error(`HTTP ${response.status}: ${message}`);
+        }
+
+        if (showSuccessToast) {
+            showToast("Data synced to Cloudflare successfully.", "success");
+        }
+    } catch (error) {
+        console.error("Failed to sync with backend:", error);
+        showToast("Could not sync to server. Local backup is still saved.", "error");
+    } finally {
+        serverSyncInProgress = false;
+    }
 }
 
 // ==========================================================================
