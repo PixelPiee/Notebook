@@ -1,0 +1,10 @@
+# Exclude backend code, migrations, and wrangler config from static assets upload
+.git/
+.wrangler/
+node_modules/
+src/
+migrations/
+wrangler.jsonc
+.assetsignore
+package.json
+package-lock.json

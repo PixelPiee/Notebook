@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rojalin Hospitality Services | Employee Payout Tracker</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar/Header Panel -->
+        <header class="app-header" id="appHeader">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div>
+                    <h1>Rojalin <span class="logo-accent">Hospitality</span></h1>
+                    <p class="subtitle">Hospitality Services — Payroll Tracker</p>
+                </div>
+            </div>
+
+            <div class="header-controls">
+                <div class="control-group">
+                    <label for="monthSelector"><i class="fa-regular fa-calendar-days"></i> Select Month</label>
+                    <input type="month" id="monthSelector" class="custom-input">
+                </div>
+            </div>
+        </header>
+
+        <!-- KPI / Metrics Panel -->
+        <section class="metrics-grid" id="metricsGrid" aria-label="Key Performance Indicators">
+            <div class="metric-card" id="cardEmployees">
+                <div class="metric-info">
+                    <span class="metric-title">Total Employees</span>
+                    <span class="metric-value" id="valTotalEmployees">0</span>
+                </div>
+                <div class="metric-icon bg-blue">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+
+            <div class="metric-card" id="cardHours">
+                <div class="metric-info">
+                    <span class="metric-title">Total Hours Worked</span>
+                    <span class="metric-value" id="valTotalHours">0.0</span>
+                </div>
+                <div class="metric-icon bg-purple">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+            </div>
+
+            <div class="metric-card" id="cardGross">
+                <div class="metric-info">
+                    <span class="metric-title">Gross Salary</span>
+                    <span class="metric-value" id="valTotalGross">₹0.00</span>
+                </div>
+                <div class="metric-icon bg-green">
+                    <i class="fa-solid fa-money-bill-wave"></i>
+                </div>
+            </div>
+
+            <div class="metric-card" id="cardAdvances">
+                <div class="metric-info">
+                    <span class="metric-title">Total Advances</span>
+                    <span class="metric-value" id="valTotalAdvances">₹0.00</span>
+                </div>
+                <div class="metric-icon bg-orange">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                </div>
+            </div>
+
+            <div class="metric-card" id="cardNet">
+                <div class="metric-info">
+                    <span class="metric-title">Net Payout</span>
+                    <span class="metric-value" id="valTotalNet">₹0.00</span>
+                </div>
+                <div class="metric-icon bg-pink">
+                    <i class="fa-solid fa-receipt"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Control Bar -->
+        <section class="control-bar" id="controlBar" aria-label="Controls and Actions">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="employeeSearch" placeholder="Search employees..."
+                    class="custom-input search-input">
+            </div>
+
+            <div class="action-buttons">
+                <button type="button" id="btnAddEmployee" class="btn btn-primary">
+                    <i class="fa-solid fa-plus"></i> Add Employee
+                </button>
+                <button type="button" id="btnExportCSV" class="btn btn-secondary">
+                    <i class="fa-solid fa-file-csv"></i> Export CSV
+                </button>
+                <button type="button" id="btnExportJSON" class="btn btn-secondary">
+                    <i class="fa-solid fa-download"></i> Backup JSON
+                </button>
+                <button type="button" id="btnImportJSONTrigger" class="btn btn-secondary">
+                    <i class="fa-solid fa-upload"></i> Restore JSON
+                </button>
+                <input type="file" id="importJSONInput" accept=".json" style="display: none;">
+            </div>
+        </section>
+
+        <!-- Main Data Table Container -->
+        <main class="table-card" id="mainTableCard">
+            <div class="table-responsive-container" id="tableWrapper">
+                <table class="payroll-table" id="payrollTable">
+                    <thead id="tableHead">
+                        <!-- Dynamically Generated -->
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Dynamically Generated -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty-state-container" id="emptyState" style="display: none;">
+                <div class="empty-icon">
+                    <i class="fa-solid fa-user-slash"></i>
+                </div>
+                <h3>No Employees Added Yet</h3>
+                <p>Click the "Add Employee" button to start tracking attendance and salaries for this month.</p>
+                <button type="button" id="btnEmptyStateAdd" class="btn btn-primary">
+                    <i class="fa-solid fa-plus"></i> Add First Employee
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Employee Modal -->
+    <div class="modal-overlay" id="employeeModal" aria-hidden="true" role="dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="employeeModalTitle">Add New Employee</h2>
+                <button type="button" class="btn-close modal-close-btn" data-close="employeeModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="employeeForm">
+                    <div class="form-group">
+                        <label for="newEmployeeName">Full Name <span class="required">*</span></label>
+                        <input type="text" id="newEmployeeName" placeholder="e.g. Dev Bhuyan" required
+                            class="custom-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="newEmployeeWO">WO Number</label>
+                        <input type="text" id="newEmployeeWO" placeholder="e.g. WO-1234"
+                            class="custom-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="newEmployeeContractor">Contractor Name</label>
+                        <input type="text" id="newEmployeeContractor" placeholder="e.g. Alpha Tech Services"
+                            class="custom-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="newEmployeeRate">Hourly Rate (₹/hour) <span class="required">*</span></label>
+                        <div class="input-prefix-wrapper">
+                            <span class="input-prefix">₹</span>
+                            <input type="number" id="newEmployeeRate" placeholder="e.g. 150" min="0" step="any" required
+                                class="custom-input">
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary modal-close-btn"
+                            data-close="employeeModal">Cancel</button>
+                        <button type="submit" id="btnSaveEmployee" class="btn btn-primary">Save Employee</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advances Manager Modal -->
+    <div class="modal-overlay" id="advancesModal" aria-hidden="true" role="dialog">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2>Manage Advances & Deductions</h2>
+                <button type="button" class="btn-close modal-close-btn" data-close="advancesModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="employee-meta-summary">
+                    <div>
+                        <span class="label">Employee:</span>
+                        <span class="value" id="advModalEmpName">John Doe</span>
+                    </div>
+                    <div>
+                        <span class="label">Total Deductible Advances:</span>
+                        <span class="value text-danger" id="advModalEmpTotal">₹0.00</span>
+                    </div>
+                </div>
+
+                <div class="advances-container">
+                    <!-- Column 1: Record New Advance -->
+                    <div class="advance-form-panel">
+                        <h3>Record New Advance</h3>
+                        <form id="advanceForm">
+                            <div class="form-group">
+                                <label for="advDate">Date <span class="required">*</span></label>
+                                <input type="date" id="advDate" required class="custom-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="advAmount">Advance Amount (₹) <span class="required">*</span></label>
+                                <div class="input-prefix-wrapper">
+                                    <span class="input-prefix">₹</span>
+                                    <input type="number" id="advAmount" min="1" step="any" placeholder="e.g. 500"
+                                        required class="custom-input">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="advNotes">Notes/Remarks</label>
+                                <input type="text" id="advNotes"
+                                    placeholder="e.g. Personal emergency, advance for travel" class="custom-input">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full-width">
+                                <i class="fa-solid fa-plus"></i> Add Advance Payment
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Column 2: History & Ledger -->
+                    <div class="advance-ledger-panel">
+                        <h3>Advance Ledger for <span id="ledgerMonthLabel">this month</span></h3>
+                        <div class="ledger-table-wrapper">
+                            <table class="ledger-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Notes</th>
+                                        <th style="text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ledgerBody">
+                                    <!-- Dynamically Generated -->
+                                </tbody>
+                            </table>
+                            <div class="empty-ledger-state" id="emptyLedger" style="display: none;">
+                                <i class="fa-solid fa-receipt"></i>
+                                <p>No advance payments recorded for this month.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast System -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
