@@ -259,6 +259,12 @@ h1, h2, h3, h4 {
 }
 
 /* Form Inputs */
+.form-row-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
 .custom-input {
     background-color: rgba(15, 23, 42, 0.6);
     border: 1px solid var(--border-color);
@@ -454,6 +460,14 @@ input[type="month"].custom-input {
     min-width: 95px;
     max-width: 95px;
     left: 420px;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.col-emp-incentive {
+    width: 105px;
+    min-width: 105px;
+    max-width: 105px;
+    left: 515px;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 

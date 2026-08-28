@@ -21,7 +21,7 @@ export default {
         try {
           // Batch fetch all data from relational tables
           const [employeesRes, hoursRes, advancesRes] = await env.DB.batch([
-            env.DB.prepare("SELECT id, name, hourly_rate AS hourlyRate, wo_number AS woNumber, contractor_name AS contractorName FROM employees"),
+            env.DB.prepare("SELECT id, name, hourly_rate AS hourlyRate, incentive_rate AS incentiveRate, wo_number AS woNumber, contractor_name AS contractorName FROM employees"),
             env.DB.prepare("SELECT employee_id, date, hours FROM hours"),
             env.DB.prepare("SELECT id, employee_id, date, amount, notes FROM advances")
           ]);
@@ -30,6 +30,7 @@ export default {
             id: emp.id,
             name: emp.name,
             hourlyRate: Number(emp.hourlyRate),
+            incentiveRate: Number(emp.incentiveRate || 0),
             woNumber: emp.woNumber || "",
             contractorName: emp.contractorName || "",
             hours: {},
@@ -105,8 +106,8 @@ export default {
           // Re-populate tables with latest client state
           for (const emp of employees) {
             statements.push(
-              env.DB.prepare("INSERT INTO employees (id, name, hourly_rate, wo_number, contractor_name) VALUES (?, ?, ?, ?, ?)")
-                .bind(emp.id, emp.name, Number(emp.hourlyRate), emp.woNumber || "", emp.contractorName || "")
+              env.DB.prepare("INSERT INTO employees (id, name, hourly_rate, incentive_rate, wo_number, contractor_name) VALUES (?, ?, ?, ?, ?, ?)")
+                .bind(emp.id, emp.name, Number(emp.hourlyRate), Number(emp.incentiveRate || 0), emp.woNumber || "", emp.contractorName || "")
             );
 
             if (emp.hours && typeof emp.hours === "object") {

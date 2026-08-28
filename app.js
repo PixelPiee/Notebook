@@ -28,6 +28,7 @@ const defaultEmployees = [
         woNumber: "WO-001",
         contractorName: "Rojalin Services",
         hourlyRate: 200,
+        incentiveRate: 0,
         hours: {
             "2026-08-01": 8,
             "2026-08-02": 8,
@@ -57,6 +58,7 @@ const defaultEmployees = [
         woNumber: "WO-002",
         contractorName: "Rojalin Services",
         hourlyRate: 150,
+        incentiveRate: 0,
         hours: {
             "2026-08-01": 8,
             "2026-08-02": 8,
@@ -82,6 +84,7 @@ const defaultEmployees = [
         woNumber: "WO-003",
         contractorName: "Alpha Tech",
         hourlyRate: 120,
+        incentiveRate: 0,
         hours: {
             "2026-08-01": 9,
             "2026-08-02": 9,
@@ -269,6 +272,7 @@ function renderTable() {
             <th class="sticky-col-left col-emp-wo">WO Number</th>
             <th class="sticky-col-left col-emp-contractor">Contractor Name</th>
             <th class="sticky-col-left col-emp-rate">Rate/Hr</th>
+            <th class="sticky-col-left col-emp-incentive">Incentive/Hr</th>
     `;
 
     for (let d = 1; d <= daysInMonth; d++) {
@@ -352,7 +356,10 @@ function renderTable() {
             `;
         }
 
-        const grossPay = empTotalHours * emp.hourlyRate;
+        const incentiveRate = emp.incentiveRate || 0;
+        const basePay = empTotalHours * emp.hourlyRate;
+        const incentivePay = empTotalHours * incentiveRate;
+        const grossPay = basePay + incentivePay;
         const totalAdvances = calculateTotalAdvancesForMonth(emp, selectedYear, selectedMonthIndex);
         const netPay = grossPay - totalAdvances;
 
@@ -375,6 +382,11 @@ function renderTable() {
                 <td class="sticky-col-left col-emp-rate">
                     <div class="employee-rate-cell">
                         <span class="employee-rate-value">₹${emp.hourlyRate}</span>
+                    </div>
+                </td>
+                <td class="sticky-col-left col-emp-incentive">
+                    <div class="employee-rate-cell">
+                        <span class="employee-rate-value">₹${emp.incentiveRate || 0}</span>
                     </div>
                 </td>
                 ${dayCellsHtml}
@@ -425,7 +437,10 @@ function updateKPIs() {
             }
         }
 
-        const empGross = empHours * emp.hourlyRate;
+        const empIncentiveRate = emp.incentiveRate || 0;
+        const empBasePay = empHours * emp.hourlyRate;
+        const empIncentivePay = empHours * empIncentiveRate;
+        const empGross = empBasePay + empIncentivePay;
         const empAdvances = calculateTotalAdvancesForMonth(emp, selectedYear, selectedMonthIndex);
         const empNet = empGross - empAdvances;
 
@@ -525,7 +540,10 @@ function recalculateRow(empId) {
         }
     }
 
-    const grossPay = empTotalHours * emp.hourlyRate;
+    const incentiveRate = emp.incentiveRate || 0;
+    const basePay = empTotalHours * emp.hourlyRate;
+    const incentivePay = empTotalHours * incentiveRate;
+    const grossPay = basePay + incentivePay;
     const totalAdvances = calculateTotalAdvancesForMonth(emp, selectedYear, selectedMonthIndex);
     const netPay = grossPay - totalAdvances;
 
@@ -556,6 +574,7 @@ function openEditEmployeeModal(empId) {
     document.getElementById("newEmployeeWO").value = emp.woNumber || "";
     document.getElementById("newEmployeeContractor").value = emp.contractorName || "";
     document.getElementById("newEmployeeRate").value = emp.hourlyRate;
+    document.getElementById("newEmployeeIncentiveRate").value = emp.incentiveRate || 0;
     openModal("employeeModal");
 }
 
@@ -568,11 +587,13 @@ function handleEmployeeFormSubmit(e) {
     const woInput = document.getElementById("newEmployeeWO");
     const contractorInput = document.getElementById("newEmployeeContractor");
     const rateInput = document.getElementById("newEmployeeRate");
+    const incentiveRateInput = document.getElementById("newEmployeeIncentiveRate");
     
     const nameVal = nameInput.value.trim();
     const woVal = woInput.value.trim();
     const contractorVal = contractorInput.value.trim();
     const rateVal = parseFloat(rateInput.value) || 0;
+    const incentiveRateVal = parseFloat(incentiveRateInput.value) || 0;
 
     if (!nameVal || rateVal < 0) {
         showToast("Please enter valid employee details", "error");
@@ -587,6 +608,7 @@ function handleEmployeeFormSubmit(e) {
             emp.woNumber = woVal;
             emp.contractorName = contractorVal;
             emp.hourlyRate = rateVal;
+            emp.incentiveRate = incentiveRateVal;
             showToast(`Employee "${nameVal}" updated successfully!`, "success");
         }
     } else {
@@ -597,6 +619,7 @@ function handleEmployeeFormSubmit(e) {
             woNumber: woVal,
             contractorName: contractorVal,
             hourlyRate: rateVal,
+            incentiveRate: incentiveRateVal,
             hours: {},
             advances: []
         };
@@ -861,11 +884,11 @@ function exportToCSV() {
     const fileLabel = `${monthNames[selectedMonthIndex]}_${selectedYear}`;
 
     // 1. Compile Header
-    let csvContent = "Employee Name,WO Number,Contractor Name,Hourly Rate (INR),";
+    let csvContent = "Employee Name,WO Number,Contractor Name,Hourly Rate (INR),Incentive Rate (INR),";
     for (let d = 1; d <= daysInMonth; d++) {
         csvContent += `Day ${d},`;
     }
-    csvContent += "Total Hours,Gross Pay (INR),Total Advances (INR),Net Pay (INR)\n";
+    csvContent += "Total Hours,Base Pay (INR),Incentive Pay (INR),Gross Pay (INR),Total Advances (INR),Net Pay (INR)\n";
 
     // 2. Build rows
     employees.forEach(emp => {
@@ -879,7 +902,10 @@ function exportToCSV() {
             daysHrsString += `${hrs},`;
         }
 
-        const gross = empTotalHours * emp.hourlyRate;
+        const incentiveRate = emp.incentiveRate || 0;
+        const basePay = empTotalHours * emp.hourlyRate;
+        const incentivePay = empTotalHours * incentiveRate;
+        const gross = basePay + incentivePay;
         const advances = calculateTotalAdvancesForMonth(emp, selectedYear, selectedMonthIndex);
         const net = gross - advances;
 
@@ -888,7 +914,8 @@ function exportToCSV() {
 
         const safeWO = `"${(emp.woNumber || '').replace(/"/g, '""')}"`;
         const safeContractor = `"${(emp.contractorName || '').replace(/"/g, '""')}"`;
-        csvContent += `${safeName},${safeWO},${safeContractor},${emp.hourlyRate},${daysHrsString}${empTotalHours.toFixed(1)},${gross.toFixed(2)},${advances.toFixed(2)},${net.toFixed(2)}\n`;
+        csvContent += `${safeName},${safeWO},${safeContractor},${emp.hourlyRate},${incentiveRate},${daysHrsString}${empTotalHours.toFixed(1)},${basePay.toFixed(2)},${incentivePay.toFixed(2)},${gross.toFixed(2)},${advances.toFixed(2)},${net.toFixed(2)}\n`;
+
     });
 
     // 3. Download Blob
@@ -939,6 +966,9 @@ function handleJSONImport(e) {
                     throw new Error(`Record at position ${i+1} is missing required fields (id, name, hourlyRate, hours).`);
                 }
             }
+
+            // Default missing incentiveRate to 0 for backwards compatibility
+            parsed.forEach(item => { item.incentiveRate = item.incentiveRate || 0; });
 
             // Restore state
             employees = parsed;
