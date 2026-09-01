@@ -441,6 +441,8 @@ input[type="month"].custom-input {
     left: 0;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
     white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .col-emp-wo {
@@ -450,6 +452,8 @@ input[type="month"].custom-input {
     left: 180px;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
     white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .col-emp-contractor {
@@ -459,6 +463,8 @@ input[type="month"].custom-input {
     left: 290px;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
     white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .col-emp-rate {
@@ -672,9 +678,10 @@ input[type="month"].custom-input {
 /* Employee Cell text styles (Excel-like wrapping) */
 .employee-name-text {
     display: block;
+    width: 100%;
+    max-width: 100%;
     white-space: normal;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
     word-break: break-word;
     line-height: 1.35;
     font-weight: 500;
@@ -698,11 +705,11 @@ input[type="month"].custom-input {
     font-size: 0.82rem;
     color: var(--text-secondary);
     white-space: normal;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
     word-break: break-word;
     line-height: 1.3;
     display: block;
+    width: 100%;
     max-width: 100%;
 }
 
