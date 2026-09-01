@@ -1286,34 +1286,35 @@ input[type="month"].custom-input {
         border-radius: 12px;
     }
 
+    /* Smooth touch scrolling momentum */
     .table-responsive-container {
-        max-height: 500px;
+        max-height: 520px;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        overscroll-behavior-x: contain;
     }
 
-    /* Shrink left sticky columns on mobile */
+    /* Keep ONLY employee name sticky on mobile for clean scrolling */
     .col-emp-name {
         width: 120px;
         min-width: 120px;
         max-width: 120px;
+        left: 0;
+        position: sticky;
+        z-index: 15;
     }
 
-    /* Unstick WO and Contractor columns on tablet */
     .col-emp-wo,
-    .col-emp-contractor {
-        position: static;
-    }
-
-    .col-emp-rate {
-        width: 70px;
-        min-width: 70px;
-        max-width: 70px;
-        left: 120px;
+    .col-emp-contractor,
+    .col-emp-rate,
+    .col-emp-incentive {
+        position: static !important;
     }
 
     .payroll-table th,
     .payroll-table td {
         padding: 0.5rem 0.35rem;
-        height: 44px;
+        min-height: 46px;
         font-size: 0.78rem;
     }
 
@@ -1331,17 +1332,18 @@ input[type="month"].custom-input {
         background-color: transparent;
     }
 
-    /* Modal: near full-screen on mobile */
+    /* Modal: fluid responsive layout for touch */
     .modal-content {
-        width: 96%;
-        max-width: 96%;
+        width: 95%;
+        max-width: 500px;
         border-radius: 14px;
-        max-height: 90vh;
+        max-height: 85vh;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .modal-lg {
-        max-width: 96% !important;
+        max-width: 95% !important;
     }
 
     .modal-header {
@@ -1356,7 +1358,10 @@ input[type="month"].custom-input {
         padding: 1rem 1.25rem;
     }
 
-    /* Advances modal: already handled by existing media query */
+    .form-row-2col {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
 
     .employee-meta-summary {
         flex-direction: column;
@@ -1366,6 +1371,7 @@ input[type="month"].custom-input {
 
     .ledger-table-wrapper {
         height: 220px;
+        -webkit-overflow-scrolling: touch;
     }
 
     /* Toast: center on mobile */
@@ -1421,19 +1427,23 @@ input[type="month"].custom-input {
         font-size: 0.75rem;
     }
 
-    /* Metrics: single column */
+    /* Metrics: 2 column grid on mobile phones */
     .metrics-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
         gap: 0.5rem;
     }
 
     .metric-card {
-        padding: 0.85rem 1rem;
+        padding: 0.75rem 0.85rem;
         border-radius: 10px;
     }
 
     .metric-value {
-        font-size: 1.2rem;
+        font-size: 1.15rem;
+    }
+
+    .metric-title {
+        font-size: 0.65rem;
     }
 
     /* Control bar */
@@ -1443,38 +1453,27 @@ input[type="month"].custom-input {
     }
 
     .action-buttons {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.4rem;
     }
 
     .action-buttons .btn {
         width: 100%;
         justify-content: center;
+        font-size: 0.72rem;
+        padding: 0.5rem 0.4rem;
     }
 
-    /* Table: even smaller sticky columns */
+    /* Table: compact name column for small screen */
     .col-emp-name {
-        width: 100px;
-        min-width: 100px;
-        max-width: 100px;
-    }
-
-    /* Unstick WO and Contractor columns on small phone */
-    .col-emp-wo,
-    .col-emp-contractor {
-        position: static;
-    }
-
-    .col-emp-rate {
-        width: 60px;
-        min-width: 60px;
-        max-width: 60px;
-        left: 100px;
+        width: 105px;
+        min-width: 105px;
+        max-width: 105px;
     }
 
     .employee-name-text {
         white-space: normal;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
+        overflow-wrap: anywhere;
         word-break: break-word;
         font-size: 0.72rem;
         line-height: 1.25;
