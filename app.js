@@ -366,12 +366,7 @@ function renderTable() {
         bodyHtml += `
             <tr id="row-${emp.id}">
                 <td class="sticky-col-left col-emp-name">
-                    <div class="employee-name-cell">
-                        <span>${escapeHtml(emp.name)}</span>
-                        <button type="button" class="btn-inline-edit" onclick="openEditEmployeeModal('${emp.id}')" title="Edit Employee Details">
-                            <i class="fa-solid fa-pen"></i>
-                        </button>
-                    </div>
+                    <span class="employee-name-text" title="${escapeHtml(emp.name)}">${escapeHtml(emp.name)}</span>
                 </td>
                 <td class="sticky-col-left col-emp-wo">
                     <span class="employee-wo-value">${escapeHtml(emp.woNumber || '')}</span>
@@ -405,9 +400,14 @@ function renderTable() {
                     <span class="net-value" id="net-${emp.id}">₹${netPay.toFixed(2)}</span>
                 </td>
                 <td class="sticky-col-right col-actions">
-                    <button type="button" class="btn-trash" onclick="deleteEmployee('${emp.id}')" title="Delete Employee">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
+                    <div class="actions-cell-group">
+                        <button type="button" class="btn-action-icon btn-edit" onclick="openEditEmployeeModal('${emp.id}')" title="Edit Employee">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button type="button" class="btn-action-icon btn-trash" onclick="deleteEmployee('${emp.id}')" title="Delete Employee">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;

@@ -391,7 +391,9 @@ input[type="month"].custom-input {
     border-bottom: 1px solid var(--border-color);
     border-right: 1px solid rgba(255, 255, 255, 0.03);
     white-space: nowrap;
-    height: 52px;
+    min-height: 52px;
+    height: auto;
+    vertical-align: middle;
 }
 
 .payroll-table th {
@@ -430,6 +432,7 @@ input[type="month"].custom-input {
    Col 2: WO Number (Width: 110px, left: 180px)
    Col 3: Contractor Name (Width: 130px, left: 290px)
    Col 4: Rate (Width: 95px, left: 420px)
+   Col 5: Incentive (Width: 105px, left: 515px)
 */
 .col-emp-name {
     width: 180px;
@@ -437,6 +440,7 @@ input[type="month"].custom-input {
     max-width: 180px;
     left: 0;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    white-space: normal;
 }
 
 .col-emp-wo {
@@ -445,6 +449,7 @@ input[type="month"].custom-input {
     max-width: 110px;
     left: 180px;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    white-space: normal;
 }
 
 .col-emp-contractor {
@@ -453,6 +458,7 @@ input[type="month"].custom-input {
     max-width: 130px;
     left: 290px;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    white-space: normal;
 }
 
 .col-emp-rate {
@@ -481,17 +487,17 @@ input[type="month"].custom-input {
 }
 
 /* RIGHT:
-   Col -5: Total Hours (Width: 80px, right: 380px)
-   Col -4: Gross Pay (Width: 100px, right: 280px)
-   Col -3: Advances (Width: 100px, right: 180px)
-   Col -2: Net Pay (Width: 110px, right: 70px)
-   Col -1: Actions (Width: 70px, right: 0)
+   Col -5: Total Hours (Width: 80px, right: 394px)
+   Col -4: Gross Pay (Width: 100px, right: 294px)
+   Col -3: Advances (Width: 100px, right: 194px)
+   Col -2: Net Pay (Width: 110px, right: 84px)
+   Col -1: Actions (Width: 84px, right: 0)
 */
 .col-total-hours {
     width: 80px;
     min-width: 80px;
     max-width: 80px;
-    right: 380px;
+    right: 394px;
     text-align: center;
     border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
@@ -500,7 +506,7 @@ input[type="month"].custom-input {
     width: 100px;
     min-width: 100px;
     max-width: 100px;
-    right: 280px;
+    right: 294px;
     font-weight: 500;
 }
 
@@ -508,22 +514,22 @@ input[type="month"].custom-input {
     width: 100px;
     min-width: 100px;
     max-width: 100px;
-    right: 180px;
+    right: 194px;
 }
 
 .col-net-pay {
     width: 110px;
     min-width: 110px;
     max-width: 110px;
-    right: 70px;
+    right: 84px;
     font-weight: 600;
     color: var(--color-success);
 }
 
 .col-actions {
-    width: 70px;
-    min-width: 70px;
-    max-width: 70px;
+    width: 84px;
+    min-width: 84px;
+    max-width: 84px;
     right: 0;
     text-align: center;
 }
@@ -663,8 +669,19 @@ input[type="month"].custom-input {
     background-color: rgba(255, 255, 255, 0.02);
 }
 
-/* Inline Edit styles */
-.employee-name-cell, .employee-rate-cell {
+/* Employee Cell text styles (Excel-like wrapping) */
+.employee-name-text {
+    display: block;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    line-height: 1.35;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.employee-rate-cell {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -680,9 +697,11 @@ input[type="month"].custom-input {
 .employee-contractor-value {
     font-size: 0.82rem;
     color: var(--text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    line-height: 1.3;
     display: block;
     max-width: 100%;
 }
@@ -728,6 +747,51 @@ input[type="month"].custom-input {
 .btn-manage-advances:hover {
     background-color: rgba(245, 158, 11, 0.18);
     border-color: rgba(245, 158, 11, 0.3);
+    transform: translateY(-1px);
+}
+
+/* Actions Column & Action Buttons */
+.actions-cell-group {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+}
+
+.btn-action-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all var(--transition-fast);
+    padding: 0;
+}
+
+.btn-action-icon.btn-edit {
+    color: var(--text-secondary);
+}
+
+.btn-action-icon.btn-edit:hover {
+    color: var(--color-primary);
+    background-color: var(--color-primary-glow);
+    border-color: var(--border-color-glow);
+    transform: translateY(-1px);
+}
+
+.btn-action-icon.btn-trash {
+    color: var(--text-muted);
+}
+
+.btn-action-icon.btn-trash:hover {
+    color: var(--color-danger);
+    background-color: var(--color-danger-glow);
+    border-color: rgba(239, 68, 68, 0.25);
     transform: translateY(-1px);
 }
 
@@ -1400,12 +1464,13 @@ input[type="month"].custom-input {
         left: 100px;
     }
 
-    .employee-name-cell span {
-        max-width: 65px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        display: inline-block;
+    .employee-name-text {
+        white-space: normal;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        font-size: 0.72rem;
+        line-height: 1.25;
     }
 
     .payroll-table th,
@@ -1517,20 +1582,20 @@ input[type="month"].custom-input {
     }
 
     .btn-trash {
-        min-width: 40px;
-        min-height: 40px;
+        min-width: 36px;
+        min-height: 36px;
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
-    .btn-inline-edit {
-        opacity: 0.6;
+    .btn-action-icon {
         min-width: 32px;
         min-height: 32px;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
+        font-size: 0.95rem;
     }
 
     .btn-manage-advances {
