@@ -18,7 +18,8 @@ const API_BASE_URL =
         : "https://notebook.dev-bhuyan256.workers.dev";
 let saveTimer = null;
 let isLoadingFromServer = false;
-let serverSyncInProgress = false;
+let syncQueue = [];
+let isSyncing = false;
 
 // Mock Data for New Users (Visual Showcase)
 const defaultEmployees = [
@@ -151,7 +152,16 @@ async function initApp() {
                 employees = [...defaultEmployees];
             }
 
-            await syncStateToBackend(true);
+            // Upload default data
+            employees.forEach(emp => {
+                queueSyncOperation({ type: "employee_upsert", payload: { id: emp.id, name: emp.name, hourlyRate: emp.hourlyRate, incentiveRate: emp.incentiveRate, woNumber: emp.woNumber, contractorName: emp.contractorName } });
+                Object.entries(emp.hours || {}).forEach(([date, hrs]) => {
+                    queueSyncOperation({ type: "attendance_upsert", payload: { employeeId: emp.id, date, hours: hrs } });
+                });
+                (emp.advances || []).forEach(adv => {
+                    queueSyncOperation({ type: "advance_upsert", payload: { id: adv.id, employeeId: emp.id, date: adv.date, amount: adv.amount, notes: adv.notes } });
+                });
+            });
         }
     } catch (error) {
         console.warn("Backend unavailable. Using local cached/demo data.", error);
@@ -490,6 +500,7 @@ function handleHMInput(inputElement) {
     if (hVal === "" && mVal === "") {
         delete emp.hours[dateStr];
         cellDiv.className = "hm-cell";
+        queueSyncOperation({ type: "attendance_delete", payload: { employeeId: empId, date: dateStr } });
     } else {
         let hours = parseInt(hVal) || 0;
         let minutes = parseInt(mVal) || 0;
@@ -506,6 +517,7 @@ function handleHMInput(inputElement) {
         
         const decimalHours = hours + (minutes / 60);
         emp.hours[dateStr] = decimalHours;
+        queueSyncOperation({ type: "attendance_upsert", payload: { employeeId: empId, date: dateStr, hours: decimalHours } });
         
         // Dynamic coloring classes
         let newClass = "hm-cell";
@@ -609,6 +621,7 @@ function handleEmployeeFormSubmit(e) {
             emp.contractorName = contractorVal;
             emp.hourlyRate = rateVal;
             emp.incentiveRate = incentiveRateVal;
+            queueSyncOperation({ type: "employee_upsert", payload: { id: emp.id, name: emp.name, hourlyRate: emp.hourlyRate, incentiveRate: emp.incentiveRate, woNumber: emp.woNumber, contractorName: emp.contractorName } });
             showToast(`Employee "${nameVal}" updated successfully!`, "success");
         }
     } else {
@@ -624,6 +637,7 @@ function handleEmployeeFormSubmit(e) {
             advances: []
         };
         employees.push(newEmp);
+        queueSyncOperation({ type: "employee_upsert", payload: { id: newEmp.id, name: newEmp.name, hourlyRate: newEmp.hourlyRate, incentiveRate: newEmp.incentiveRate, woNumber: newEmp.woNumber, contractorName: newEmp.contractorName } });
         showToast(`Employee "${nameVal}" added successfully!`, "success");
     }
 
@@ -637,6 +651,7 @@ function deleteEmployee(empId) {
     if (!emp) return;
 
     if (confirm(`Are you sure you want to delete employee "${emp.name}"? All hour logs and advances for this employee will be permanently removed.`)) {
+        queueSyncOperation({ type: "employee_delete", payload: { id: empId } });
         employees = employees.filter(e => e.id !== empId);
         saveStateToStorage();
         renderApp();
@@ -770,6 +785,7 @@ function handleAdvanceFormSubmit(e) {
     };
 
     emp.advances.push(newAdvance);
+    queueSyncOperation({ type: "advance_upsert", payload: { id: newAdvance.id, employeeId: emp.id, date: newAdvance.date, amount: newAdvance.amount, notes: newAdvance.notes } });
     saveStateToStorage();
     
     // UI Update
@@ -793,6 +809,7 @@ function deleteAdvance(advanceId) {
     const amountStr = adv ? `₹${adv.amount.toFixed(2)}` : "";
 
     if (confirm(`Remove this advance payment record of ${amountStr}? This will adjust the employee's payout.`)) {
+        queueSyncOperation({ type: "advance_delete", payload: { id: advanceId } });
         emp.advances = emp.advances.filter(a => a.id !== advanceId);
         saveStateToStorage();
         
@@ -834,44 +851,57 @@ function closeModal(modalId) {
 function saveStateToStorage() {
     // Keep an immediate local cache so the UI remains responsive/offline.
     localStorage.setItem("salarytrack_state", JSON.stringify(employees));
+}
 
-    // Avoid sending one network request for every character typed into a
-    // timesheet cell. Changes are synced in a short debounce window.
+function queueSyncOperation(operation) {
+    syncQueue.push(operation);
     if (isLoadingFromServer) return;
 
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
-        syncStateToBackend(false);
+        processSyncQueue();
     }, 500);
 }
 
-async function syncStateToBackend(showSuccessToast = false) {
-    if (serverSyncInProgress) return;
+async function processSyncQueue() {
+    if (isSyncing || syncQueue.length === 0) return;
 
-    serverSyncInProgress = true;
+    isSyncing = true;
+    const batch = [...syncQueue];
+    syncQueue = []; // Clear queue so new items can be added while syncing
+
     try {
-        const response = await fetch(`${API_BASE_URL}/api/state`, {
-            method: "PUT",
+        const response = await fetch(`${API_BASE_URL}/api/sync`, {
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Accept": "application/json"
             },
-            body: JSON.stringify({ employees })
+            body: JSON.stringify({ operations: batch })
         });
 
         if (!response.ok) {
             const message = await response.text();
             throw new Error(`HTTP ${response.status}: ${message}`);
         }
-
-        if (showSuccessToast) {
-            showToast("Data synced to Cloudflare successfully.", "success");
-        }
     } catch (error) {
-        console.error("Failed to sync with backend:", error);
-        showToast("Could not sync to server. Local backup is still saved.", "error");
-    } finally {
-        serverSyncInProgress = false;
+        console.error("Failed to sync batch with backend:", error);
+        // Put failed operations back at the front of the queue
+        syncQueue = [...batch, ...syncQueue];
+        showToast("Could not sync to server. Will retry automatically.", "error");
+
+        // Wait before next retry if there's a failure
+        setTimeout(() => {
+            isSyncing = false;
+            if (syncQueue.length > 0) processSyncQueue();
+        }, 5000);
+        return;
+    }
+
+    isSyncing = false;
+    // If more items were added during the sync, process them now
+    if (syncQueue.length > 0) {
+        processSyncQueue();
     }
 }
 
