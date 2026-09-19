@@ -19,7 +19,54 @@
 </head>
 
 <body>
-    <div class="app-container">
+    <!-- Login Screen Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo-icon">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h2>Rojalin <span class="logo-accent">Hospitality</span></h2>
+                <p class="login-subtitle">Sign in to access Payroll Tracker</p>
+            </div>
+
+            <div class="login-body">
+                <form id="loginForm" autocomplete="on">
+                    <div class="login-error-banner" id="loginError" style="display: none;">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span id="loginErrorMsg">Invalid username or password</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="loginUsername"><i class="fa-solid fa-user"></i> Username</label>
+                        <input type="text" id="loginUsername" placeholder="Enter username" required class="custom-input" autocomplete="username">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="loginPassword"><i class="fa-solid fa-lock"></i> Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="loginPassword" placeholder="Enter password" required class="custom-input" autocomplete="current-password">
+                            <button type="button" class="btn-toggle-password" id="btnTogglePassword" title="Toggle Password Visibility">
+                                <i class="fa-solid fa-eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btnLoginSubmit" class="btn btn-primary btn-full-width btn-login">
+                        <i class="fa-solid fa-right-to-bracket"></i> Sign In
+                    </button>
+                </form>
+
+                <div class="default-credentials-hint">
+                    <i class="fa-solid fa-key"></i>
+                    <span>Default Admin Account: <strong>admin</strong> / <strong>admin123</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Container -->
+    <div class="app-container" id="appContainer" style="display: none;">
         <!-- Sidebar/Header Panel -->
         <header class="app-header" id="appHeader">
             <div class="logo-area">
@@ -36,6 +83,14 @@
                 <div class="control-group">
                     <label for="monthSelector"><i class="fa-regular fa-calendar-days"></i> Select Month</label>
                     <input type="month" id="monthSelector" class="custom-input">
+                </div>
+
+                <div class="user-profile-badge" id="userProfileBadge">
+                    <div class="user-avatar"><i class="fa-solid fa-user-tie"></i></div>
+                    <span class="user-name" id="loggedInUsername">admin</span>
+                    <button type="button" id="btnLogout" class="btn-logout" title="Sign Out">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
                 </div>
             </div>
         </header>

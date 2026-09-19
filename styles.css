@@ -1634,3 +1634,194 @@ input[type="month"].custom-input {
         transform: none;
     }
 }
+
+/* ==========================================================================
+   Login Screen & Auth UI
+   ========================================================================== */
+.login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 50% 30%, rgba(30, 41, 59, 0.95), rgba(7, 10, 19, 0.98));
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1.5rem;
+    transition: opacity var(--transition-normal);
+}
+
+.login-card {
+    background-color: rgba(15, 23, 42, 0.75);
+    border: 1px solid var(--border-color-glow);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(99, 102, 241, 0.2);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 440px;
+    overflow: hidden;
+    animation: loginCardPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes loginCardPop {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.login-header {
+    text-align: center;
+    padding: 2.5rem 2rem 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, rgba(15, 23, 42, 0) 100%);
+}
+
+.login-logo-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: #ffffff;
+    box-shadow: var(--shadow-glow);
+    margin-bottom: 1rem;
+}
+
+.login-header h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+}
+
+.login-subtitle {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+}
+
+.login-body {
+    padding: 2rem;
+}
+
+.login-error-banner {
+    background-color: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrapper .custom-input {
+    padding-right: 2.75rem;
+}
+
+.btn-toggle-password {
+    position: absolute;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.35rem;
+    border-radius: 6px;
+    transition: color var(--transition-fast);
+}
+
+.btn-toggle-password:hover {
+    color: var(--text-primary);
+}
+
+.btn-login {
+    margin-top: 1.5rem;
+    padding: 0.85rem 1.5rem;
+    font-size: 0.95rem;
+    justify-content: center;
+}
+
+.default-credentials-hint {
+    margin-top: 1.5rem;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px dashed var(--border-color);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.default-credentials-hint i {
+    color: var(--color-warning);
+    font-size: 0.9rem;
+}
+
+/* User profile badge in app header */
+.user-profile-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+    padding: 0.35rem 0.65rem 0.35rem 0.5rem;
+    border-radius: 30px;
+}
+
+.user-avatar {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 0.8rem;
+}
+
+.user-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.btn-logout {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0.25rem 0.35rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+}
+
+.btn-logout:hover {
+    color: var(--color-danger);
+    background-color: rgba(239, 68, 68, 0.15);
+}
+

@@ -18,8 +18,7 @@ const API_BASE_URL =
         : "https://notebook.dev-bhuyan256.workers.dev";
 let saveTimer = null;
 let isLoadingFromServer = false;
-let syncQueue = [];
-let isSyncing = false;
+let serverSyncInProgress = false;
 
 // Mock Data for New Users (Visual Showcase)
 const defaultEmployees = [
@@ -104,198 +103,30 @@ const defaultEmployees = [
     }
 ];
 
-// Auth state
-let authToken = localStorage.getItem("salarytrack_token") || null;
-let currentUser = null;
-
-function getAuthHeaders() {
-    const headers = { "Accept": "application/json" };
-    if (authToken) {
-        headers["Authorization"] = `Bearer ${authToken}`;
-    }
-    return headers;
-}
-
 // ==========================================================================
-// Authentication & Access Control
+// Initialization & Lifecycle
 // ==========================================================================
 document.addEventListener("DOMContentLoaded", () => {
     initApp();
 });
 
 async function initApp() {
-    registerAuthListeners();
-    const isAuthenticated = await checkAuthStatus();
-    if (isAuthenticated) {
-        await loadAppData();
-    }
-}
-
-function registerAuthListeners() {
-    const loginForm = document.getElementById("loginForm");
-    if (loginForm) {
-        loginForm.addEventListener("submit", handleLoginSubmit);
-    }
-
-    const logoutBtn = document.getElementById("btnLogout");
-    if (logoutBtn) {
-        logoutBtn.addEventListener("click", handleLogout);
-    }
-
-    const togglePasswordBtn = document.getElementById("btnTogglePassword");
-    const passwordInput = document.getElementById("loginPassword");
-    const eyeIcon = document.getElementById("eyeIcon");
-    if (togglePasswordBtn && passwordInput && eyeIcon) {
-        togglePasswordBtn.addEventListener("click", () => {
-            if (passwordInput.type === "password") {
-                passwordInput.type = "text";
-                eyeIcon.className = "fa-solid fa-eye-slash";
-            } else {
-                passwordInput.type = "password";
-                eyeIcon.className = "fa-solid fa-eye";
-            }
-        });
-    }
-}
-
-function showLoginScreen(errorMsg = "") {
-    document.getElementById("loginOverlay").style.display = "flex";
-    document.getElementById("appContainer").style.display = "none";
-    const errorBanner = document.getElementById("loginError");
-    if (errorMsg) {
-        document.getElementById("loginErrorMsg").textContent = errorMsg;
-        errorBanner.style.display = "flex";
-    } else {
-        errorBanner.style.display = "none";
-    }
-}
-
-function hideLoginScreen() {
-    document.getElementById("loginOverlay").style.display = "none";
-    document.getElementById("appContainer").style.display = "block";
-    if (currentUser) {
-        document.getElementById("loggedInUsername").textContent = currentUser.username;
-    }
-}
-
-async function checkAuthStatus() {
-    if (!authToken) {
-        showLoginScreen();
-        return false;
-    }
-    try {
-        const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
-            method: "GET",
-            headers: getAuthHeaders()
-        });
-        if (!res.ok) {
-            throw new Error("Session expired");
-        }
-        const data = await res.json();
-        if (data.authenticated && data.user) {
-            currentUser = data.user;
-            hideLoginScreen();
-            return true;
-        } else {
-            throw new Error("Unauthenticated");
-        }
-    } catch (err) {
-        authToken = null;
-        localStorage.removeItem("salarytrack_token");
-        showLoginScreen("Session expired. Please log in.");
-        return false;
-    }
-}
-
-async function handleLoginSubmit(e) {
-    e.preventDefault();
-    const usernameInput = document.getElementById("loginUsername");
-    const passwordInput = document.getElementById("loginPassword");
-    const submitBtn = document.getElementById("btnLoginSubmit");
-    const errorBanner = document.getElementById("loginError");
-
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value;
-
-    if (!username || !password) {
-        document.getElementById("loginErrorMsg").textContent = "Please enter both username and password.";
-        errorBanner.style.display = "flex";
-        return;
-    }
-
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Signing in...`;
-    errorBanner.style.display = "none";
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-            throw new Error(data.error || "Login failed");
-        }
-
-        authToken = data.token;
-        currentUser = data.user;
-        localStorage.setItem("salarytrack_token", authToken);
-        passwordInput.value = "";
-
-        hideLoginScreen();
-        showToast(`Welcome back, ${currentUser.username}!`, "success");
-
-        await loadAppData();
-    } catch (err) {
-        document.getElementById("loginErrorMsg").textContent = err.message || "Invalid username or password";
-        errorBanner.style.display = "flex";
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> Sign In`;
-    }
-}
-
-async function handleLogout() {
-    if (authToken) {
-        try {
-            await fetch(`${API_BASE_URL}/api/auth/logout`, {
-                method: "POST",
-                headers: getAuthHeaders()
-            });
-        } catch (e) {
-            console.warn("Logout request error:", e);
-        }
-    }
-    authToken = null;
-    currentUser = null;
-    localStorage.removeItem("salarytrack_token");
-    showLoginScreen();
-    showToast("Logged out successfully.", "info");
-}
-
-async function loadAppData() {
     // 1. Initialize Date Selectors
     const monthSelector = document.getElementById("monthSelector");
 
+    // Set default month to August 2026 to match the existing demo data
     selectedYear = 2026;
     selectedMonthIndex = 7;
     monthSelector.value = "2026-08";
 
-    // 2. Load shared data from Cloudflare Worker/D1 backend
+    // 2. Load shared data from the Cloudflare Worker/D1 backend.
+    // LocalStorage is kept as a temporary offline cache/fallback.
     isLoadingFromServer = true;
     try {
         const response = await fetch(`${API_BASE_URL}/api/state`, {
             method: "GET",
-            headers: getAuthHeaders()
+            headers: { "Accept": "application/json" }
         });
-
-        if (response.status === 401) {
-            handleLogout();
-            return;
-        }
 
         if (!response.ok) {
             throw new Error(`Backend returned HTTP ${response.status}`);
@@ -307,6 +138,8 @@ async function loadAppData() {
             employees = payload.employees;
             localStorage.setItem("salarytrack_state", JSON.stringify(employees));
         } else {
+            // First-time setup: preserve an existing local backup if available;
+            // otherwise use the current demo data and upload it to the backend.
             const storedState = localStorage.getItem("salarytrack_state");
             if (storedState) {
                 try {
@@ -318,16 +151,7 @@ async function loadAppData() {
                 employees = [...defaultEmployees];
             }
 
-            // Upload default data
-            employees.forEach(emp => {
-                queueSyncOperation({ type: "employee_upsert", payload: { id: emp.id, name: emp.name, hourlyRate: emp.hourlyRate, incentiveRate: emp.incentiveRate, woNumber: emp.woNumber, contractorName: emp.contractorName } });
-                Object.entries(emp.hours || {}).forEach(([date, hrs]) => {
-                    queueSyncOperation({ type: "attendance_upsert", payload: { employeeId: emp.id, date, hours: hrs } });
-                });
-                (emp.advances || []).forEach(adv => {
-                    queueSyncOperation({ type: "advance_upsert", payload: { id: adv.id, employeeId: emp.id, date: adv.date, amount: adv.amount, notes: adv.notes } });
-                });
-            });
+            await syncStateToBackend(true);
         }
     } catch (error) {
         console.warn("Backend unavailable. Using local cached/demo data.", error);
@@ -349,7 +173,10 @@ async function loadAppData() {
         isLoadingFromServer = false;
     }
 
+    // 3. Register Event Listeners
     registerEventListeners();
+
+    // 4. Render Table and KPI values
     renderApp();
 }
 
@@ -663,7 +490,6 @@ function handleHMInput(inputElement) {
     if (hVal === "" && mVal === "") {
         delete emp.hours[dateStr];
         cellDiv.className = "hm-cell";
-        queueSyncOperation({ type: "attendance_delete", payload: { employeeId: empId, date: dateStr } });
     } else {
         let hours = parseInt(hVal) || 0;
         let minutes = parseInt(mVal) || 0;
@@ -680,7 +506,6 @@ function handleHMInput(inputElement) {
         
         const decimalHours = hours + (minutes / 60);
         emp.hours[dateStr] = decimalHours;
-        queueSyncOperation({ type: "attendance_upsert", payload: { employeeId: empId, date: dateStr, hours: decimalHours } });
         
         // Dynamic coloring classes
         let newClass = "hm-cell";
@@ -784,7 +609,6 @@ function handleEmployeeFormSubmit(e) {
             emp.contractorName = contractorVal;
             emp.hourlyRate = rateVal;
             emp.incentiveRate = incentiveRateVal;
-            queueSyncOperation({ type: "employee_upsert", payload: { id: emp.id, name: emp.name, hourlyRate: emp.hourlyRate, incentiveRate: emp.incentiveRate, woNumber: emp.woNumber, contractorName: emp.contractorName } });
             showToast(`Employee "${nameVal}" updated successfully!`, "success");
         }
     } else {
@@ -800,7 +624,6 @@ function handleEmployeeFormSubmit(e) {
             advances: []
         };
         employees.push(newEmp);
-        queueSyncOperation({ type: "employee_upsert", payload: { id: newEmp.id, name: newEmp.name, hourlyRate: newEmp.hourlyRate, incentiveRate: newEmp.incentiveRate, woNumber: newEmp.woNumber, contractorName: newEmp.contractorName } });
         showToast(`Employee "${nameVal}" added successfully!`, "success");
     }
 
@@ -814,7 +637,6 @@ function deleteEmployee(empId) {
     if (!emp) return;
 
     if (confirm(`Are you sure you want to delete employee "${emp.name}"? All hour logs and advances for this employee will be permanently removed.`)) {
-        queueSyncOperation({ type: "employee_delete", payload: { id: empId } });
         employees = employees.filter(e => e.id !== empId);
         saveStateToStorage();
         renderApp();
@@ -948,7 +770,6 @@ function handleAdvanceFormSubmit(e) {
     };
 
     emp.advances.push(newAdvance);
-    queueSyncOperation({ type: "advance_upsert", payload: { id: newAdvance.id, employeeId: emp.id, date: newAdvance.date, amount: newAdvance.amount, notes: newAdvance.notes } });
     saveStateToStorage();
     
     // UI Update
@@ -972,7 +793,6 @@ function deleteAdvance(advanceId) {
     const amountStr = adv ? `₹${adv.amount.toFixed(2)}` : "";
 
     if (confirm(`Remove this advance payment record of ${amountStr}? This will adjust the employee's payout.`)) {
-        queueSyncOperation({ type: "advance_delete", payload: { id: advanceId } });
         emp.advances = emp.advances.filter(a => a.id !== advanceId);
         saveStateToStorage();
         
@@ -1014,62 +834,44 @@ function closeModal(modalId) {
 function saveStateToStorage() {
     // Keep an immediate local cache so the UI remains responsive/offline.
     localStorage.setItem("salarytrack_state", JSON.stringify(employees));
-}
 
-function queueSyncOperation(operation) {
-    syncQueue.push(operation);
+    // Avoid sending one network request for every character typed into a
+    // timesheet cell. Changes are synced in a short debounce window.
     if (isLoadingFromServer) return;
 
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
-        processSyncQueue();
+        syncStateToBackend(false);
     }, 500);
 }
 
-async function processSyncQueue() {
-    if (isSyncing || syncQueue.length === 0) return;
+async function syncStateToBackend(showSuccessToast = false) {
+    if (serverSyncInProgress) return;
 
-    isSyncing = true;
-    const batch = [...syncQueue];
-    syncQueue = []; // Clear queue so new items can be added while syncing
-
+    serverSyncInProgress = true;
     try {
-        const response = await fetch(`${API_BASE_URL}/api/sync`, {
-            method: "POST",
+        const response = await fetch(`${API_BASE_URL}/api/state`, {
+            method: "PUT",
             headers: {
-                ...getAuthHeaders(),
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Accept": "application/json"
             },
-            body: JSON.stringify({ operations: batch })
+            body: JSON.stringify({ employees })
         });
-
-        if (response.status === 401) {
-            handleLogout();
-            return;
-        }
 
         if (!response.ok) {
             const message = await response.text();
             throw new Error(`HTTP ${response.status}: ${message}`);
         }
+
+        if (showSuccessToast) {
+            showToast("Data synced to Cloudflare successfully.", "success");
+        }
     } catch (error) {
-        console.error("Failed to sync batch with backend:", error);
-        // Put failed operations back at the front of the queue
-        syncQueue = [...batch, ...syncQueue];
-        showToast("Could not sync to server. Will retry automatically.", "error");
-
-        // Wait before next retry if there's a failure
-        setTimeout(() => {
-            isSyncing = false;
-            if (syncQueue.length > 0) processSyncQueue();
-        }, 5000);
-        return;
-    }
-
-    isSyncing = false;
-    // If more items were added during the sync, process them now
-    if (syncQueue.length > 0) {
-        processSyncQueue();
+        console.error("Failed to sync with backend:", error);
+        showToast("Could not sync to server. Local backup is still saved.", "error");
+    } finally {
+        serverSyncInProgress = false;
     }
 }
 
