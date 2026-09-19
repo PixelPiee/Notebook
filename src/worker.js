@@ -94,14 +94,20 @@ export default {
       try {
         await ensureAuthTables();
 
-        // Auto-seed default user if users table is empty
-        const userCountRes = await env.DB.prepare("SELECT COUNT(*) as count FROM users").first();
-        if (!userCountRes || userCountRes.count === 0) {
+        // Auto-seed or update default user password to Rojalin0809
+        const adminUser = await env.DB.prepare("SELECT id FROM users WHERE username = 'admin'").first();
+        if (!adminUser) {
           const defaultSalt = generateSalt();
-          const defaultHash = await hashPassword("admin123", defaultSalt);
+          const defaultHash = await hashPassword("Rojalin0809", defaultSalt);
           await env.DB.prepare(
             "INSERT INTO users (id, username, password_hash, salt) VALUES (?, ?, ?, ?)"
           ).bind("user-admin-default", "admin", defaultHash, defaultSalt).run();
+        } else {
+          const newSalt = generateSalt();
+          const newHash = await hashPassword("Rojalin0809", newSalt);
+          await env.DB.prepare(
+            "UPDATE users SET password_hash = ?, salt = ? WHERE username = 'admin'"
+          ).bind(newHash, newSalt).run();
         }
 
         const body = await request.json();
