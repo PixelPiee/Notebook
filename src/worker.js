@@ -202,9 +202,15 @@ export default {
     if (url.pathname === "/api/state") {
       if (request.method === "GET") {
         try {
+          try {
+            await env.DB.exec("ALTER TABLE employees ADD COLUMN shift_duration REAL DEFAULT 8;");
+          } catch (e) {
+            // Column already exists or table not ready
+          }
+
           // Batch fetch all data from relational tables
           const [employeesRes, hoursRes, advancesRes] = await env.DB.batch([
-            env.DB.prepare("SELECT id, name, hourly_rate AS hourlyRate, incentive_rate AS incentiveRate, wo_number AS woNumber, contractor_name AS contractorName FROM employees"),
+            env.DB.prepare("SELECT id, name, hourly_rate AS hourlyRate, incentive_rate AS incentiveRate, shift_duration AS shiftDuration, wo_number AS woNumber, contractor_name AS contractorName FROM employees"),
             env.DB.prepare("SELECT employee_id, date, hours FROM hours"),
             env.DB.prepare("SELECT id, employee_id, date, amount, notes FROM advances")
           ]);
@@ -214,6 +220,7 @@ export default {
             name: emp.name,
             hourlyRate: Number(emp.hourlyRate),
             incentiveRate: Number(emp.incentiveRate || 0),
+            shiftDuration: Number(emp.shiftDuration || 8),
             woNumber: emp.woNumber || "",
             contractorName: emp.contractorName || "",
             hours: {},
@@ -288,11 +295,11 @@ export default {
 
           switch (op.type) {
             case "employee_upsert": {
-              const { id, name, hourlyRate, incentiveRate, woNumber, contractorName } = op.payload;
+              const { id, name, hourlyRate, incentiveRate, shiftDuration, woNumber, contractorName } = op.payload;
               statements.push(
                 env.DB.prepare(
-                  "INSERT INTO employees (id, name, hourly_rate, incentive_rate, wo_number, contractor_name) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, hourly_rate=excluded.hourly_rate, incentive_rate=excluded.incentive_rate, wo_number=excluded.wo_number, contractor_name=excluded.contractor_name"
-                ).bind(id, name, Number(hourlyRate), Number(incentiveRate || 0), woNumber || "", contractorName || "")
+                  "INSERT INTO employees (id, name, hourly_rate, incentive_rate, shift_duration, wo_number, contractor_name) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, hourly_rate=excluded.hourly_rate, incentive_rate=excluded.incentive_rate, shift_duration=excluded.shift_duration, wo_number=excluded.wo_number, contractor_name=excluded.contractor_name"
+                ).bind(id, name, Number(hourlyRate), Number(incentiveRate || 0), Number(shiftDuration || 8), woNumber || "", contractorName || "")
               );
               break;
             }

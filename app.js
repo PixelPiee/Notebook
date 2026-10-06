@@ -7,6 +7,7 @@ let employees = [];
 let selectedYear = 2026;
 let selectedMonthIndex = 7; // August (0-indexed)
 let searchQuery = "";
+let selectedContractorFilter = "ALL";
 let currentEmployeeForAdvances = null;
 let editingEmployeeId = null;
 
@@ -30,6 +31,7 @@ const defaultEmployees = [
         contractorName: "Rojalin Services",
         hourlyRate: 200,
         incentiveRate: 0,
+        shiftDuration: 10,
         hours: {
             "2026-08-01": 8,
             "2026-08-02": 8,
@@ -60,6 +62,7 @@ const defaultEmployees = [
         contractorName: "Rojalin Services",
         hourlyRate: 150,
         incentiveRate: 0,
+        shiftDuration: 8,
         hours: {
             "2026-08-01": 8,
             "2026-08-02": 8,
@@ -86,6 +89,7 @@ const defaultEmployees = [
         contractorName: "Alpha Tech",
         hourlyRate: 120,
         incentiveRate: 0,
+        shiftDuration: 10,
         hours: {
             "2026-08-01": 9,
             "2026-08-02": 9,
@@ -320,7 +324,7 @@ async function loadAppData() {
 
             // Upload default data
             employees.forEach(emp => {
-                queueSyncOperation({ type: "employee_upsert", payload: { id: emp.id, name: emp.name, hourlyRate: emp.hourlyRate, incentiveRate: emp.incentiveRate, woNumber: emp.woNumber, contractorName: emp.contractorName } });
+                queueSyncOperation({ type: "employee_upsert", payload: { id: emp.id, name: emp.name, hourlyRate: emp.hourlyRate, incentiveRate: emp.incentiveRate, shiftDuration: emp.shiftDuration || 8, woNumber: emp.woNumber, contractorName: emp.contractorName } });
                 Object.entries(emp.hours || {}).forEach(([date, hrs]) => {
                     queueSyncOperation({ type: "attendance_upsert", payload: { employeeId: emp.id, date, hours: hrs } });
                 });
@@ -370,10 +374,18 @@ function registerEventListeners() {
     employeeSearch.addEventListener("input", (e) => {
         searchQuery = e.target.value.trim();
         renderTable();
-        // Do not update metrics, they show totals of all records in standard payroll or just matching employees
-        // Standard dashboard displays matching employee metrics. Let's make it calculate for filtered list.
         updateKPIs();
     });
+
+    // Contractor dropdown filter
+    const contractorFilter = document.getElementById("contractorFilter");
+    if (contractorFilter) {
+        contractorFilter.addEventListener("change", (e) => {
+            selectedContractorFilter = e.target.value;
+            renderTable();
+            updateKPIs();
+        });
+    }
 
     // Modal Triggers & Controls
     document.getElementById("btnAddEmployee").addEventListener("click", () => openAddEmployeeModal());
@@ -408,8 +420,73 @@ function registerEventListeners() {
 // Rendering Controller
 // ==========================================================================
 function renderApp() {
+    populateContractorFilter();
     renderTable();
     updateKPIs();
+}
+
+function getFilteredEmployees() {
+    const query = searchQuery.toLowerCase();
+    const contractorSelect = document.getElementById("contractorFilter");
+    const selectedContractor = contractorSelect ? contractorSelect.value : selectedContractorFilter;
+
+    return employees.filter(emp => {
+        // 1. Contractor Dropdown Filter
+        if (selectedContractor !== "ALL") {
+            const empContractor = (emp.contractorName || "").trim();
+            if (selectedContractor === "__UNASSIGNED__") {
+                if (empContractor !== "") return false;
+            } else if (empContractor.toLowerCase() !== selectedContractor.toLowerCase()) {
+                return false;
+            }
+        }
+
+        // 2. Multi-field search filter (Name, Contractor, WO Number, Rate, Incentive, etc.)
+        if (!query) return true;
+        const nameMatch = emp.name.toLowerCase().includes(query);
+        const contractorMatch = (emp.contractorName || "").toLowerCase().includes(query);
+        const woMatch = (emp.woNumber || "").toLowerCase().includes(query);
+        const rateMatch = String(emp.hourlyRate).includes(query);
+        const incentiveMatch = String(emp.incentiveRate || 0).includes(query);
+        return nameMatch || contractorMatch || woMatch || rateMatch || incentiveMatch;
+    });
+}
+
+function populateContractorFilter() {
+    const select = document.getElementById("contractorFilter");
+    if (!select) return;
+
+    const currentVal = select.value || selectedContractorFilter || "ALL";
+    const contractorSet = new Set();
+    let hasUnassigned = false;
+
+    employees.forEach(emp => {
+        const cName = (emp.contractorName || "").trim();
+        if (cName) {
+            contractorSet.add(cName);
+        } else {
+            hasUnassigned = true;
+        }
+    });
+
+    const sortedContractors = Array.from(contractorSet).sort();
+
+    let html = `<option value="ALL">All Contractors</option>`;
+    sortedContractors.forEach(c => {
+        html += `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`;
+    });
+    if (hasUnassigned) {
+        html += `<option value="__UNASSIGNED__">Unassigned Contractor</option>`;
+    }
+
+    select.innerHTML = html;
+    
+    // Preserve selection if valid
+    if (Array.from(select.options).some(opt => opt.value === currentVal)) {
+        select.value = currentVal;
+    } else {
+        select.value = "ALL";
+    }
 }
 
 function getDaysInMonth(year, monthIndex) {
@@ -431,6 +508,13 @@ function calculateTotalAdvancesForMonth(employee, year, monthIndex) {
         .reduce((sum, adv) => sum + parseFloat(adv.amount || 0), 0);
 }
 
+function formatDaysDisplay(totalHours, shiftDuration) {
+    const shift = parseFloat(shiftDuration) || 8;
+    if (shift <= 0) return "0.0 d";
+    const days = totalHours / shift;
+    return `${days.toFixed(1)} d`;
+}
+
 function renderTable() {
     const daysInMonth = getDaysInMonth(selectedYear, selectedMonthIndex);
     const tableHead = document.getElementById("tableHead");
@@ -446,6 +530,7 @@ function renderTable() {
             <th class="sticky-col-left col-emp-contractor">Contractor Name</th>
             <th class="sticky-col-left col-emp-rate">Rate/Hr</th>
             <th class="sticky-col-left col-emp-incentive">Incentive/Hr</th>
+            <th class="sticky-col-left col-shift-duration">Shift Hrs</th>
     `;
 
     for (let d = 1; d <= daysInMonth; d++) {
@@ -461,6 +546,7 @@ function renderTable() {
 
     headHtml += `
             <th class="sticky-col-right col-total-hours">Total Hrs</th>
+            <th class="sticky-col-right col-days-worked">Days Worked</th>
             <th class="sticky-col-right col-gross-pay">Gross Pay</th>
             <th class="sticky-col-right col-advances">Advances</th>
             <th class="sticky-col-right col-net-pay">Net Pay</th>
@@ -469,8 +555,8 @@ function renderTable() {
     `;
     tableHead.innerHTML = headHtml;
 
-    // 2. Filter employees by search criteria
-    const filtered = employees.filter(emp => emp.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    // 2. Filter employees by contractor and search criteria
+    const filtered = getFilteredEmployees();
 
     if (filtered.length === 0) {
         tableWrapper.style.display = "none";
@@ -530,6 +616,7 @@ function renderTable() {
         }
 
         const incentiveRate = emp.incentiveRate || 0;
+        const shiftDuration = emp.shiftDuration !== undefined ? emp.shiftDuration : 8;
         const basePay = empTotalHours * emp.hourlyRate;
         const incentivePay = empTotalHours * incentiveRate;
         const grossPay = basePay + incentivePay;
@@ -557,9 +644,25 @@ function renderTable() {
                         <span class="employee-rate-value">₹${emp.incentiveRate || 0}</span>
                     </div>
                 </td>
+                <td class="sticky-col-left col-shift-duration">
+                    <div class="shift-duration-cell">
+                        <input type="number" 
+                               class="shift-input" 
+                               value="${shiftDuration}" 
+                               min="1" max="24" step="0.5" 
+                               data-emp-id="${emp.id}"
+                               onchange="handleShiftDurationChange('${emp.id}', this.value)"
+                               oninput="handleShiftDurationChange('${emp.id}', this.value)"
+                               title="Shift Duration (Hours)">
+                        <span class="shift-unit">h</span>
+                    </div>
+                </td>
                 ${dayCellsHtml}
                 <td class="sticky-col-right col-total-hours">
                     <span class="hours-value" id="hours-${emp.id}">${formatHoursDisplay(empTotalHours)}</span>
+                </td>
+                <td class="sticky-col-right col-days-worked">
+                    <span class="days-value" id="days-${emp.id}">${formatDaysDisplay(empTotalHours, shiftDuration)}</span>
                 </td>
                 <td class="sticky-col-right col-gross-pay">
                     <span class="gross-value" id="gross-${emp.id}">₹${grossPay.toFixed(2)}</span>
@@ -590,10 +693,11 @@ function renderTable() {
 }
 
 function updateKPIs() {
-    const filtered = employees.filter(emp => emp.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    const filtered = getFilteredEmployees();
     
     let totalEmployees = filtered.length;
     let totalHours = 0;
+    let totalDays = 0;
     let grossSalary = 0;
     let totalAdvances = 0;
     let netPayout = 0;
@@ -610,6 +714,8 @@ function updateKPIs() {
             }
         }
 
+        const shiftDuration = emp.shiftDuration !== undefined ? parseFloat(emp.shiftDuration) : 8;
+        const empDays = shiftDuration > 0 ? empHours / shiftDuration : 0;
         const empIncentiveRate = emp.incentiveRate || 0;
         const empBasePay = empHours * emp.hourlyRate;
         const empIncentivePay = empHours * empIncentiveRate;
@@ -618,6 +724,7 @@ function updateKPIs() {
         const empNet = empGross - empAdvances;
 
         totalHours += empHours;
+        totalDays += empDays;
         grossSalary += empGross;
         totalAdvances += empAdvances;
         netPayout += empNet;
@@ -625,6 +732,8 @@ function updateKPIs() {
 
     document.getElementById("valTotalEmployees").textContent = totalEmployees;
     document.getElementById("valTotalHours").textContent = formatHoursDisplay(totalHours);
+    const valDaysEl = document.getElementById("valTotalDays");
+    if (valDaysEl) valDaysEl.textContent = totalDays.toFixed(1);
     document.getElementById("valTotalGross").textContent = "₹" + grossSalary.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     document.getElementById("valTotalAdvances").textContent = "₹" + totalAdvances.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     document.getElementById("valTotalNet").textContent = "₹" + netPayout.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -701,6 +810,29 @@ function handleHMInput(inputElement) {
     updateKPIs();
 }
 
+function handleShiftDurationChange(empId, val) {
+    const emp = employees.find(e => e.id === empId);
+    if (!emp) return;
+    const num = parseFloat(val);
+    if (isNaN(num) || num <= 0) return;
+    emp.shiftDuration = num;
+    queueSyncOperation({
+        type: "employee_upsert",
+        payload: {
+            id: emp.id,
+            name: emp.name,
+            hourlyRate: emp.hourlyRate,
+            incentiveRate: emp.incentiveRate,
+            shiftDuration: emp.shiftDuration,
+            woNumber: emp.woNumber,
+            contractorName: emp.contractorName
+        }
+    });
+    saveStateToStorage();
+    recalculateRow(empId);
+    updateKPIs();
+}
+
 function recalculateRow(empId) {
     const emp = employees.find(e => e.id === empId);
     if (!emp) return;
@@ -716,6 +848,7 @@ function recalculateRow(empId) {
     }
 
     const incentiveRate = emp.incentiveRate || 0;
+    const shiftDuration = emp.shiftDuration !== undefined ? emp.shiftDuration : 8;
     const basePay = empTotalHours * emp.hourlyRate;
     const incentivePay = empTotalHours * incentiveRate;
     const grossPay = basePay + incentivePay;
@@ -723,10 +856,20 @@ function recalculateRow(empId) {
     const netPay = grossPay - totalAdvances;
 
     // Update DOM nodes directly for extreme speed and fluid feels
-    document.getElementById(`hours-${empId}`).textContent = formatHoursDisplay(empTotalHours);
-    document.getElementById(`gross-${empId}`).textContent = `₹${grossPay.toFixed(2)}`;
-    document.getElementById(`adv-btn-${empId}`).textContent = `₹${totalAdvances.toFixed(2)}`;
-    document.getElementById(`net-${empId}`).textContent = `₹${netPay.toFixed(2)}`;
+    const hrsEl = document.getElementById(`hours-${empId}`);
+    if (hrsEl) hrsEl.textContent = formatHoursDisplay(empTotalHours);
+    
+    const daysEl = document.getElementById(`days-${empId}`);
+    if (daysEl) daysEl.textContent = formatDaysDisplay(empTotalHours, shiftDuration);
+
+    const grossEl = document.getElementById(`gross-${empId}`);
+    if (grossEl) grossEl.textContent = `₹${grossPay.toFixed(2)}`;
+
+    const advEl = document.getElementById(`adv-btn-${empId}`);
+    if (advEl) advEl.textContent = `₹${totalAdvances.toFixed(2)}`;
+
+    const netEl = document.getElementById(`net-${empId}`);
+    if (netEl) netEl.textContent = `₹${netPay.toFixed(2)}`;
 }
 
 // ==========================================================================
@@ -736,6 +879,7 @@ function openAddEmployeeModal() {
     editingEmployeeId = null;
     document.getElementById("employeeModalTitle").textContent = "Add New Employee";
     document.getElementById("employeeForm").reset();
+    document.getElementById("newEmployeeShiftDuration").value = 8;
     openModal("employeeModal");
 }
 
@@ -750,6 +894,7 @@ function openEditEmployeeModal(empId) {
     document.getElementById("newEmployeeContractor").value = emp.contractorName || "";
     document.getElementById("newEmployeeRate").value = emp.hourlyRate;
     document.getElementById("newEmployeeIncentiveRate").value = emp.incentiveRate || 0;
+    document.getElementById("newEmployeeShiftDuration").value = emp.shiftDuration !== undefined ? emp.shiftDuration : 8;
     openModal("employeeModal");
 }
 
@@ -763,14 +908,16 @@ function handleEmployeeFormSubmit(e) {
     const contractorInput = document.getElementById("newEmployeeContractor");
     const rateInput = document.getElementById("newEmployeeRate");
     const incentiveRateInput = document.getElementById("newEmployeeIncentiveRate");
+    const shiftDurationInput = document.getElementById("newEmployeeShiftDuration");
     
     const nameVal = nameInput.value.trim();
     const woVal = woInput.value.trim();
     const contractorVal = contractorInput.value.trim();
     const rateVal = parseFloat(rateInput.value) || 0;
     const incentiveRateVal = parseFloat(incentiveRateInput.value) || 0;
+    const shiftDurationVal = parseFloat(shiftDurationInput.value) || 8;
 
-    if (!nameVal || rateVal < 0) {
+    if (!nameVal || rateVal < 0 || shiftDurationVal <= 0) {
         showToast("Please enter valid employee details", "error");
         return;
     }
@@ -784,7 +931,8 @@ function handleEmployeeFormSubmit(e) {
             emp.contractorName = contractorVal;
             emp.hourlyRate = rateVal;
             emp.incentiveRate = incentiveRateVal;
-            queueSyncOperation({ type: "employee_upsert", payload: { id: emp.id, name: emp.name, hourlyRate: emp.hourlyRate, incentiveRate: emp.incentiveRate, woNumber: emp.woNumber, contractorName: emp.contractorName } });
+            emp.shiftDuration = shiftDurationVal;
+            queueSyncOperation({ type: "employee_upsert", payload: { id: emp.id, name: emp.name, hourlyRate: emp.hourlyRate, incentiveRate: emp.incentiveRate, shiftDuration: emp.shiftDuration, woNumber: emp.woNumber, contractorName: emp.contractorName } });
             showToast(`Employee "${nameVal}" updated successfully!`, "success");
         }
     } else {
@@ -796,11 +944,12 @@ function handleEmployeeFormSubmit(e) {
             contractorName: contractorVal,
             hourlyRate: rateVal,
             incentiveRate: incentiveRateVal,
+            shiftDuration: shiftDurationVal,
             hours: {},
             advances: []
         };
         employees.push(newEmp);
-        queueSyncOperation({ type: "employee_upsert", payload: { id: newEmp.id, name: newEmp.name, hourlyRate: newEmp.hourlyRate, incentiveRate: newEmp.incentiveRate, woNumber: newEmp.woNumber, contractorName: newEmp.contractorName } });
+        queueSyncOperation({ type: "employee_upsert", payload: { id: newEmp.id, name: newEmp.name, hourlyRate: newEmp.hourlyRate, incentiveRate: newEmp.incentiveRate, shiftDuration: newEmp.shiftDuration, woNumber: newEmp.woNumber, contractorName: newEmp.contractorName } });
         showToast(`Employee "${nameVal}" added successfully!`, "success");
     }
 
@@ -1082,11 +1231,11 @@ function exportToCSV() {
     const fileLabel = `${monthNames[selectedMonthIndex]}_${selectedYear}`;
 
     // 1. Compile Header
-    let csvContent = "Employee Name,WO Number,Contractor Name,Hourly Rate (INR),Incentive Rate (INR),";
+    let csvContent = "Employee Name,WO Number,Contractor Name,Hourly Rate (INR),Incentive Rate (INR),Shift Duration (Hrs),";
     for (let d = 1; d <= daysInMonth; d++) {
         csvContent += `Day ${d},`;
     }
-    csvContent += "Total Hours,Base Pay (INR),Incentive Pay (INR),Gross Pay (INR),Total Advances (INR),Net Pay (INR)\n";
+    csvContent += "Total Hours,Days Worked,Base Pay (INR),Incentive Pay (INR),Gross Pay (INR),Total Advances (INR),Net Pay (INR)\n";
 
     // 2. Build rows
     employees.forEach(emp => {
@@ -1101,6 +1250,8 @@ function exportToCSV() {
         }
 
         const incentiveRate = emp.incentiveRate || 0;
+        const shiftDuration = emp.shiftDuration !== undefined ? emp.shiftDuration : 8;
+        const daysWorked = (empTotalHours / (shiftDuration || 8)).toFixed(1);
         const basePay = empTotalHours * emp.hourlyRate;
         const incentivePay = empTotalHours * incentiveRate;
         const gross = basePay + incentivePay;
@@ -1112,7 +1263,7 @@ function exportToCSV() {
 
         const safeWO = `"${(emp.woNumber || '').replace(/"/g, '""')}"`;
         const safeContractor = `"${(emp.contractorName || '').replace(/"/g, '""')}"`;
-        csvContent += `${safeName},${safeWO},${safeContractor},${emp.hourlyRate},${incentiveRate},${daysHrsString}${empTotalHours.toFixed(1)},${basePay.toFixed(2)},${incentivePay.toFixed(2)},${gross.toFixed(2)},${advances.toFixed(2)},${net.toFixed(2)}\n`;
+        csvContent += `${safeName},${safeWO},${safeContractor},${emp.hourlyRate},${incentiveRate},${shiftDuration},${daysHrsString}${empTotalHours.toFixed(1)},${daysWorked},${basePay.toFixed(2)},${incentivePay.toFixed(2)},${gross.toFixed(2)},${advances.toFixed(2)},${net.toFixed(2)}\n`;
 
     });
 
@@ -1165,8 +1316,11 @@ function handleJSONImport(e) {
                 }
             }
 
-            // Default missing incentiveRate to 0 for backwards compatibility
-            parsed.forEach(item => { item.incentiveRate = item.incentiveRate || 0; });
+            // Default missing fields for backwards compatibility
+            parsed.forEach(item => {
+                item.incentiveRate = item.incentiveRate || 0;
+                item.shiftDuration = item.shiftDuration || 8;
+            });
 
             // Restore state
             employees = parsed;

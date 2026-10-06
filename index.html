@@ -112,6 +112,16 @@
                 </div>
             </div>
 
+            <div class="metric-card" id="cardDays">
+                <div class="metric-info">
+                    <span class="metric-title">Total Days Worked</span>
+                    <span class="metric-value" id="valTotalDays">0.0</span>
+                </div>
+                <div class="metric-icon bg-cyan">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+            </div>
+
             <div class="metric-card" id="cardGross">
                 <div class="metric-info">
                     <span class="metric-title">Gross Salary</span>
@@ -145,10 +155,17 @@
 
         <!-- Control Bar -->
         <section class="control-bar" id="controlBar" aria-label="Controls and Actions">
-            <div class="search-box">
-                <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="text" id="employeeSearch" placeholder="Search employees..."
-                    class="custom-input search-input">
+            <div class="filter-controls">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="employeeSearch" placeholder="Search by name, contractor, WO..."
+                        class="custom-input search-input">
+                </div>
+                <div class="contractor-filter-box">
+                    <select id="contractorFilter" class="custom-input contractor-filter-select" title="Filter by Contractor">
+                        <option value="ALL">All Contractors</option>
+                    </select>
+                </div>
             </div>
 
             <div class="action-buttons">
@@ -235,6 +252,14 @@
                                 <input type="number" id="newEmployeeIncentiveRate" placeholder="e.g. 50" min="0" step="any"
                                     value="0" class="custom-input">
                             </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="newEmployeeShiftDuration">Shift Duration (Hours/Shift) <span class="required">*</span></label>
+                        <div class="input-suffix-wrapper">
+                            <input type="number" id="newEmployeeShiftDuration" placeholder="e.g. 10 or 8" min="1" max="24" step="0.5"
+                                value="8" required class="custom-input">
+                            <span class="input-suffix">hrs</span>
                         </div>
                     </div>
                     <div class="modal-actions">
