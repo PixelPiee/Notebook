@@ -446,17 +446,18 @@ input[type="month"].custom-input {
 
 /* Offsets for multiple sticky columns */
 /* LEFT:
-   Col 1: Name (Width: 170px, left: 0)
-   Col 2: WO Number (Width: 100px, left: 170px)
-   Col 3: Contractor Name (Width: 130px, left: 270px)
-   Col 4: Rate (Width: 85px, left: 400px)
-   Col 5: Incentive (Width: 90px, left: 485px)
-   Col 6: Shift Hrs (Width: 90px, left: 575px)
+   Col 1: Name (Width: 160px, left: 0)
+   Col 2: WO Number (Width: 95px, left: 160px)
+   Col 3: Contractor Name (Width: 125px, left: 255px)
+   Col 4: Rate (Width: 80px, left: 380px)
+   Col 5: Incentive (Width: 85px, left: 460px)
+   Col 6: Shift Hrs (Width: 85px, left: 545px)
+   Col 7: Rate/Day (Width: 90px, left: 630px)
 */
 .col-emp-name {
-    width: 170px;
-    min-width: 170px;
-    max-width: 170px;
+    width: 160px;
+    min-width: 160px;
+    max-width: 160px;
     left: 0;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
     white-space: normal;
@@ -465,10 +466,10 @@ input[type="month"].custom-input {
 }
 
 .col-emp-wo {
-    width: 100px;
-    min-width: 100px;
-    max-width: 100px;
-    left: 170px;
+    width: 95px;
+    min-width: 95px;
+    max-width: 95px;
+    left: 160px;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
     white-space: normal;
     overflow-wrap: anywhere;
@@ -476,10 +477,10 @@ input[type="month"].custom-input {
 }
 
 .col-emp-contractor {
-    width: 130px;
-    min-width: 130px;
-    max-width: 130px;
-    left: 270px;
+    width: 125px;
+    min-width: 125px;
+    max-width: 125px;
+    left: 255px;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
     white-space: normal;
     overflow-wrap: anywhere;
@@ -487,26 +488,34 @@ input[type="month"].custom-input {
 }
 
 .col-emp-rate {
-    width: 85px;
-    min-width: 85px;
-    max-width: 85px;
-    left: 400px;
+    width: 80px;
+    min-width: 80px;
+    max-width: 80px;
+    left: 380px;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .col-emp-incentive {
-    width: 90px;
-    min-width: 90px;
-    max-width: 90px;
-    left: 485px;
+    width: 85px;
+    min-width: 85px;
+    max-width: 85px;
+    left: 460px;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .col-shift-duration {
+    width: 85px;
+    min-width: 85px;
+    max-width: 85px;
+    left: 545px;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.col-emp-dayrate {
     width: 90px;
     min-width: 90px;
     max-width: 90px;
-    left: 575px;
+    left: 630px;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
@@ -627,6 +636,22 @@ input[type="month"].custom-input {
     font-size: 0.85rem;
     font-weight: 500;
     pointer-events: none;
+}
+
+.rate-preview-box {
+    background-color: rgba(15, 23, 42, 0.6);
+    border: 1px dashed var(--border-color);
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.rate-preview-value {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    color: #22d3ee;
+    font-size: 0.95rem;
 }
 
 .payroll-table td.sticky-col-right {

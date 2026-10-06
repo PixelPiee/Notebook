@@ -402,6 +402,12 @@ function registerEventListeners() {
     // Employee Form Submission (Add/Edit)
     document.getElementById("employeeForm").addEventListener("submit", handleEmployeeFormSubmit);
 
+    // Live preview for calculated Per Day Rate in Modal
+    const rateInput = document.getElementById("newEmployeeRate");
+    const shiftInput = document.getElementById("newEmployeeShiftDuration");
+    if (rateInput) rateInput.addEventListener("input", updatePerDayRateModalPreview);
+    if (shiftInput) shiftInput.addEventListener("input", updatePerDayRateModalPreview);
+
     // Advance Form Submission
     document.getElementById("advanceForm").addEventListener("submit", handleAdvanceFormSubmit);
 
@@ -531,6 +537,7 @@ function renderTable() {
             <th class="sticky-col-left col-emp-rate">Rate/Hr</th>
             <th class="sticky-col-left col-emp-incentive">Incentive/Hr</th>
             <th class="sticky-col-left col-shift-duration">Shift Hrs</th>
+            <th class="sticky-col-left col-emp-dayrate">Rate/Day</th>
     `;
 
     for (let d = 1; d <= daysInMonth; d++) {
@@ -655,6 +662,11 @@ function renderTable() {
                                oninput="handleShiftDurationChange('${emp.id}', this.value)"
                                title="Shift Duration (Hours)">
                         <span class="shift-unit">h</span>
+                    </div>
+                </td>
+                <td class="sticky-col-left col-emp-dayrate">
+                    <div class="employee-rate-cell">
+                        <span class="employee-rate-value" id="dayrate-${emp.id}">₹${((emp.hourlyRate || 0) * shiftDuration).toFixed(2)}</span>
                     </div>
                 </td>
                 ${dayCellsHtml}
@@ -862,6 +874,9 @@ function recalculateRow(empId) {
     const daysEl = document.getElementById(`days-${empId}`);
     if (daysEl) daysEl.textContent = formatDaysDisplay(empTotalHours, shiftDuration);
 
+    const dayRateEl = document.getElementById(`dayrate-${empId}`);
+    if (dayRateEl) dayRateEl.textContent = `₹${((emp.hourlyRate || 0) * shiftDuration).toFixed(2)}`;
+
     const grossEl = document.getElementById(`gross-${empId}`);
     if (grossEl) grossEl.textContent = `₹${grossPay.toFixed(2)}`;
 
@@ -872,6 +887,14 @@ function recalculateRow(empId) {
     if (netEl) netEl.textContent = `₹${netPay.toFixed(2)}`;
 }
 
+function updatePerDayRateModalPreview() {
+    const rate = parseFloat(document.getElementById("newEmployeeRate")?.value) || 0;
+    const shift = parseFloat(document.getElementById("newEmployeeShiftDuration")?.value) || 0;
+    const dayRate = rate * shift;
+    const previewEl = document.getElementById("perDayRatePreview");
+    if (previewEl) previewEl.textContent = `₹${dayRate.toFixed(2)} / day`;
+}
+
 // ==========================================================================
 // Employee Management (Modal Add / Edit)
 // ==========================================================================
@@ -880,6 +903,7 @@ function openAddEmployeeModal() {
     document.getElementById("employeeModalTitle").textContent = "Add New Employee";
     document.getElementById("employeeForm").reset();
     document.getElementById("newEmployeeShiftDuration").value = 8;
+    updatePerDayRateModalPreview();
     openModal("employeeModal");
 }
 
@@ -895,6 +919,7 @@ function openEditEmployeeModal(empId) {
     document.getElementById("newEmployeeRate").value = emp.hourlyRate;
     document.getElementById("newEmployeeIncentiveRate").value = emp.incentiveRate || 0;
     document.getElementById("newEmployeeShiftDuration").value = emp.shiftDuration !== undefined ? emp.shiftDuration : 8;
+    updatePerDayRateModalPreview();
     openModal("employeeModal");
 }
 
@@ -1231,7 +1256,7 @@ function exportToCSV() {
     const fileLabel = `${monthNames[selectedMonthIndex]}_${selectedYear}`;
 
     // 1. Compile Header
-    let csvContent = "Employee Name,WO Number,Contractor Name,Hourly Rate (INR),Incentive Rate (INR),Shift Duration (Hrs),";
+    let csvContent = "Employee Name,WO Number,Contractor Name,Hourly Rate (INR),Incentive Rate (INR),Shift Duration (Hrs),Per Day Rate (INR),";
     for (let d = 1; d <= daysInMonth; d++) {
         csvContent += `Day ${d},`;
     }
@@ -1251,6 +1276,7 @@ function exportToCSV() {
 
         const incentiveRate = emp.incentiveRate || 0;
         const shiftDuration = emp.shiftDuration !== undefined ? emp.shiftDuration : 8;
+        const perDayRate = ((emp.hourlyRate || 0) * shiftDuration).toFixed(2);
         const daysWorked = (empTotalHours / (shiftDuration || 8)).toFixed(1);
         const basePay = empTotalHours * emp.hourlyRate;
         const incentivePay = empTotalHours * incentiveRate;
@@ -1263,7 +1289,7 @@ function exportToCSV() {
 
         const safeWO = `"${(emp.woNumber || '').replace(/"/g, '""')}"`;
         const safeContractor = `"${(emp.contractorName || '').replace(/"/g, '""')}"`;
-        csvContent += `${safeName},${safeWO},${safeContractor},${emp.hourlyRate},${incentiveRate},${shiftDuration},${daysHrsString}${empTotalHours.toFixed(1)},${daysWorked},${basePay.toFixed(2)},${incentivePay.toFixed(2)},${gross.toFixed(2)},${advances.toFixed(2)},${net.toFixed(2)}\n`;
+        csvContent += `${safeName},${safeWO},${safeContractor},${emp.hourlyRate},${incentiveRate},${shiftDuration},${perDayRate},${daysHrsString}${empTotalHours.toFixed(1)},${daysWorked},${basePay.toFixed(2)},${incentivePay.toFixed(2)},${gross.toFixed(2)},${advances.toFixed(2)},${net.toFixed(2)}\n`;
 
     });
 
